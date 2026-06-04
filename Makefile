@@ -1,3 +1,5 @@
+export PATH := /usr/local/go/bin:$(PATH)
+
 .PHONY: dev dev-fe dev-be db db-stop migrate test test-be lint-fe install
 
 # ── Dev ──────────────────────────────────────────────────────────────────────

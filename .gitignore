@@ -11,6 +11,7 @@ frontend/build/
 
 # ── Go / Backend ──────────────────────────────────────────────────────────────
 backend/bin/
+backend/server
 *.exe
 *.exe~
 *.dll
