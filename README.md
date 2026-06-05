@@ -17,13 +17,16 @@ Make sure the following are installed on your machine before getting started.
 | [Node.js](https://nodejs.org) | 20+ | Run the frontend dev server |
 | [Go](https://golang.org/dl) | 1.23+ | Run the backend server |
 | [Docker Desktop](https://www.docker.com/products/docker-desktop) | Latest | Run PostgreSQL in a container |
-| [Make](https://www.gnu.org/software/make/) | Any | Run project commands (pre-installed on macOS/Linux) |
+| [Git](https://git-scm.com/downloads) | Any | Version control |
+| [Make](https://www.gnu.org/software/make/) | Any | Run project commands (pre-installed on macOS/Linux, see Windows note below) |
 
 > **macOS shortcut:** Install Node and Go via Homebrew:
 > ```bash
 > brew install node go
 > brew install --cask docker
 > ```
+
+> **Windows:** See the [Windows Setup](#windows-setup) section below before continuing.
 
 ---
 
@@ -32,17 +35,22 @@ Make sure the following are installed on your machine before getting started.
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
-cd Coffery
+git clone https://github.com/TerenceWin/coffery.git
+cd coffery
 ```
 
 ### 2. Set up environment variables
 
-Copy the example env files for both services:
-
+**macOS / Linux:**
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
+```
+
+**Windows (Command Prompt or PowerShell):**
+```powershell
+copy backend\.env.example backend\.env
+copy frontend\.env.example frontend\.env
 ```
 
 The defaults work out of the box for local development — no changes needed.
@@ -74,6 +82,63 @@ This will:
 Once running, open:
 - Frontend: `http://localhost:3000`
 - Backend API: `http://localhost:8080/api/health`
+
+---
+
+## Windows Setup
+
+Make is not installed on Windows by default. You have two options:
+
+### Option A — Use WSL2 (Recommended)
+
+WSL2 (Windows Subsystem for Linux) lets you run a full Linux environment inside Windows. This is the smoothest experience and avoids most Windows compatibility issues.
+
+1. Open PowerShell as Administrator and run:
+   ```powershell
+   wsl --install
+   ```
+2. Restart your computer when prompted.
+3. Open the **Ubuntu** app from the Start menu and create a username/password.
+4. Inside WSL, install the required tools:
+   ```bash
+   # Node.js (via nvm)
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+   source ~/.bashrc
+   nvm install 20
+
+   # Go
+   sudo apt update && sudo apt install -y golang-go
+
+   # Make
+   sudo apt install -y make
+   ```
+5. Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop), then in Docker Desktop settings enable **Settings → Resources → WSL Integration** for your Ubuntu distro.
+6. Clone the repo inside WSL (not on the Windows filesystem):
+   ```bash
+   cd ~
+   git clone https://github.com/TerenceWin/coffery.git
+   cd coffery
+   ```
+7. Continue from [Step 2](#2-set-up-environment-variables) above — all `make` commands work normally inside WSL.
+
+### Option B — Install Make natively on Windows
+
+If you prefer not to use WSL:
+
+1. Install [Chocolatey](https://chocolatey.org/install) (Windows package manager) by running this in PowerShell as Administrator:
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force
+   [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+   iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+   ```
+2. Install Make:
+   ```powershell
+   choco install make -y
+   ```
+3. Install [Node.js](https://nodejs.org) and [Go](https://golang.org/dl) using their Windows installers.
+4. Install [Git for Windows](https://git-scm.com/download/win) — this also gives you Git Bash.
+5. **Important:** Run all `make` commands from **Git Bash**, not PowerShell or Command Prompt, as the Makefile uses Unix shell syntax.
+6. Continue from [Step 1](#1-clone-the-repository) above.
 
 ---
 
