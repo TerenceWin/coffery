@@ -24,7 +24,8 @@ func InitializeDB() *sql.DB {
 		id SERIAL PRIMARY KEY, 
 		item TEXT UNIQUE, 
 		code TEXT UNIQUE, 
-		cost INTEGER
+		cost INTEGER,
+		available BOOLEAN DEFAULT true
 	)`
 
 	// Defer executes once the return statement is executed. Executed by LIFO
