@@ -1,5 +1,7 @@
 package owner
 
+// TODO make a helper function that reduces the repetition for each function
+
 import (
 	"database/sql"
 	"errors"
@@ -79,6 +81,31 @@ func UpdateCost(database *sql.DB, code string, newPrice int) error { // Added: R
 	}
 
 	// Show the change
+	affectedRows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affectedRows == 0 {
+		return fmt.Errorf("cannot update: item with code '%s' does not exist", code)
+	}
+
+	fmt.Printf("Updated %d\n", affectedRows)
+	return nil
+}
+
+func UpdateAvailability(database *sql.DB, code string, avail bool) error {
+
+	statement, err := database.Prepare("UPDATE menu SET availability = $1 Where code = $2")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	result, err := statement.Exec(avail, code)
+	if err != nil {
+		return err
+	}
+
 	affectedRows, err := result.RowsAffected()
 	if err != nil {
 		return err
