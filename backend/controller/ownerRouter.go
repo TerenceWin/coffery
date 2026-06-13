@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"cafe-app-backend/hub"
 	"cafe-app-backend/model/owner"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -10,22 +12,47 @@ import (
 )
 
 // RegisterOwnerRoutes sets up all the endpoints for the owner's screen
-func RegisterOwnerRoutes(router *gin.Engine, db *sql.DB) {
+func RegisterOwnerRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
 
-	// Get the cost of an item by its code
-	// Example URL: https://cafe-app-test.onrender.com/cost/C01
-	router.GET("/cost/:code", func(c *gin.Context) {
-		code := c.Param("code")
+	router.GET("/menu", func(c *gin.Context) {
+		// Call the function we just made
+		items, err := owner.GetAllItems(db)
 
-		cost, err := owner.GetCost(db, code)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch menu"})
 			return
 		}
 
+		// If all good, sends the list of items as JSON
+		c.JSON(http.StatusOK, items)
+	})
+
+	// JSON from frontend: {"code": "C01", "avail": false}
+	router.POST("/update-availability", func(c *gin.Context) {
+		var input struct {
+			Code  string `json:"code" binding:"required"`
+			Avail *bool  `json:"avail" binding:"required"` // Use *bool so we can check if it's explicitly set to false
+		}
+
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+			return
+		}
+
+		// Update the item in database
+		err := owner.UpdateAvailability(db, input.Code, *input.Avail)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Broadcast only when availability changes
+		// a simple JSON string to tell the frontend exactly what changed
+		msg := fmt.Sprintf(`{"type": "availability_update", "code": "%s", "available": %t}`, input.Code, *input.Avail)
+		h.Broadcast([]byte(msg))
+
 		c.JSON(http.StatusOK, gin.H{
-			"code": code,
-			"cost": cost,
+			"message": "Availability updated successfully",
 		})
 	})
 

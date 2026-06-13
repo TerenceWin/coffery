@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strconv"
 
 	// Using pgconn for specific Postgres error codes for duplicates
 	"github.com/jackc/pgx/v5/pgconn"
@@ -135,26 +134,38 @@ func GetCost(database *sql.DB, code string) (int, error) {
 	return cost, nil
 }
 
-func PrintAllRecords(database *sql.DB) {
-
+// CHANGED TO GET RECORDS
+// GetAllItems queries the DB and returns a slice of all menu items
+func GetAllItems(database *sql.DB) ([]MenuItem, error) {
 	rows, err := database.Query("SELECT id, item, code, cost FROM menu")
 	if err != nil {
-		fmt.Println("Error querying records:", err)
-		return
+		return nil, err
 	}
-	defer rows.Close() // SAme as statements, have to close rows when done querying
+	defer rows.Close()
 
-	var id int
-	var item string
-	var code string
-	var cost int
+	// Array of the menu items
+	var items []MenuItem
 
 	for rows.Next() {
-		err := rows.Scan(&id, &item, &code, &cost)
+		var i MenuItem
+		// Scan directly into the struct's fields
+		err := rows.Scan(&i.ID, &i.Item, &i.Code, &i.Cost)
 		if err != nil {
-			fmt.Println("Error scanning row:", err)
+			fmt.Println("Error getting row:", err)
 			continue
 		}
-		fmt.Println(strconv.Itoa(id) + ": " + item + " Item code: " + code + " Cost: " + strconv.Itoa(cost) + " yen")
+
+		items = append(items, i)
 	}
+
+	return items, nil
+}
+
+// TODO make separate data class for this
+
+type MenuItem struct {
+	ID   int    `json:"id"`
+	Item string `json:"item"`
+	Code string `json:"code"`
+	Cost int    `json:"cost"`
 }
