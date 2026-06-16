@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver
@@ -20,24 +21,28 @@ func InitializeDB() *sql.DB {
 
 	// Creating the database table menu
 	query := `
-	CREATE TABLE IF NOT EXISTS menu (
-		id SERIAL PRIMARY KEY, 
-		item TEXT UNIQUE, 
-		code TEXT UNIQUE, 
-		cost INTEGER,
-		availability BOOLEAN DEFAULT true
-	)`
+    CREATE TABLE IF NOT EXISTS menu (
+        id SERIAL PRIMARY KEY, 
+        item TEXT UNIQUE, 
+        code TEXT UNIQUE, 
+        cost INTEGER,
+        availability BOOLEAN DEFAULT true
+    )`
 
 	// Defer executes once the return statement is executed. Executed by LIFO
-	statement, err := database.Prepare(query)
+	_, err = database.Exec(query)
 	if err != nil {
 		panic(err)
 	}
-	defer statement.Close()
 
-	_, err = statement.Exec()
+	// Automatically add the column if it's missing
+	alterQuery := `
+    ALTER TABLE menu 
+    ADD COLUMN IF NOT EXISTS availability BOOLEAN DEFAULT true;`
+
+	_, err = database.Exec(alterQuery)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error adding column:", err) // Just log it, don't panic
 	}
 
 	return database
