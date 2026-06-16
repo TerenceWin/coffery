@@ -9,6 +9,7 @@ import (
 )
 
 func InitializeDB() *sql.DB {
+
 	// connection to the Render database (Environment variable)
 	url := os.Getenv("DATABASE_URL")
 

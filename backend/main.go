@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	// Take gin off of debug mode
+	gin.SetMode(gin.ReleaseMode)
 
 	db := database.InitializeDB()
 	defer db.Close()
