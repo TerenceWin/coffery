@@ -12,7 +12,7 @@ interface MenuItem {
   item: string;
   code: string;
   cost: number;
-  available: boolean;
+  availability: boolean;
 }
 
 export default function BossPage() {
@@ -86,10 +86,10 @@ export default function BossPage() {
   async function toggleAvail(code: string, avail: boolean) {
     try {
       await api.post('/update-availability', { code, avail });
-      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, available: avail } : i));
+      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, availability: avail } : i));
       toast(t('toastAvailOK'), 'ok');
     } catch {
-      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, available: !avail } : i));
+      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, availability: !avail } : i));
       toast(t('toastErrAvail'), 'err');
     }
   }
@@ -260,7 +260,7 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete }: {
   useEffect(() => setPrice(String(item.cost)), [item.cost]);
 
   return (
-    <div className={`item-card${!item.available ? ' unavail' : ''}`} id={`card-${item.code}`}>
+    <div className={`item-card${!item.availability ? ' unavail' : ''}`} id={`card-${item.code}`}>
       <div className="item-emoji-sm">{getEmoji(item.item)}</div>
       <div className="item-meta">
         <div className="item-meta-name">{item.item}</div>
@@ -276,7 +276,7 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete }: {
           />
         </div>
         <label className="toggle">
-          <input type="checkbox" checked={item.available} onChange={e => onToggle(e.target.checked)} />
+          <input type="checkbox" checked={item.availability} onChange={e => onToggle(e.target.checked)} />
           <span className="slider" />
         </label>
         <button className="btn-del" onClick={onDelete}>

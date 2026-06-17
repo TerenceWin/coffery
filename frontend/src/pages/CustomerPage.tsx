@@ -50,31 +50,56 @@ export default function CustomerPage() {
     }
   }
 
-  function connectWS() {
+function connectWS() {
     if (wsRetry.current) clearTimeout(wsRetry.current);
-    const wsUrl = (import.meta.env.VITE_API_URL ?? 'http://coffery.onrender.com').replace('https://', 'wss://').replace('http://', 'ws://');
+    
+    // Use wss:// for secure connections on Render
+    const wsUrl = 'wss://coffery.onrender.com';
     const ws = new WebSocket(`${wsUrl}/ws`);
+
     ws.onmessage = ({ data }) => {
-      try {
-        const msg = JSON.parse(data);
-        if (msg.type === 'availability_update') {
-          setMenuItems(prev => prev.map(i => i.code === msg.code ? { ...i, available: msg.available } : i));
-          if (!msg.available) {
-            setCart(prev => {
-              if (!prev[msg.code]) return prev;
-              const name = prev[msg.code].name;
-              toast(t('itemNowSoldOut', name), 'err');
-              const next = { ...prev };
-              delete next[msg.code];
-              return next;
-            });
-          }
+        try {
+            const msg = JSON.parse(data);
+            if (msg.type === 'availability_update') {
+                setMenuItems(prev => prev.map(i => 
+                    i.code === msg.code ? { ...i, available: msg.available } : i
+                ));
+                
+                if (!msg.available) {
+                    setCart(prev => {
+                        if (!prev[msg.code]) return prev;
+                        toast(t('itemNowSoldOut', prev[msg.code].name), 'err');
+                        const next = { ...prev };
+                        delete next[msg.code];
+                        return next;
+                    });
+                }
+            }
+        } catch (e) {
+            console.error("Failed to parse WS message:", e);
         }
-      } catch { /* ignore malformed messages */ }
     };
-    ws.onclose = () => { wsRetry.current = setTimeout(connectWS, 4000); };
-    ws.onerror = () => ws.close();
-  }
+
+    ws.onclose = () => { 
+        // Only retry if not manually closed
+        wsRetry.current = setTimeout(connectWS, 4000); 
+    };
+    
+    ws.onerror = (err) => {
+        console.error("WebSocket Error:", err);
+        ws.close();
+    };
+
+    return ws; // Return instance to be managed by useEffect
+}
+
+useEffect(() => {
+    const ws = connectWS();
+    return () => {
+        if (wsRetry.current) clearTimeout(wsRetry.current);
+        ws.close();
+    };
+}, []);
 
   function addToCart(item: MenuItem) {
     if (!item.available) return;
