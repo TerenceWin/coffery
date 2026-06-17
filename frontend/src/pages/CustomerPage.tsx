@@ -32,9 +32,18 @@ export default function CustomerPage() {
   const [cartOpen, setCartOpen]   = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wsRef   = useRef<WebSocket | null>(null);
+  const wsDead  = useRef(false);
 
   useEffect(() => {
-    if (tableNum) loadMenu();
+    if (!tableNum) return;
+    wsDead.current = false;
+    loadMenu();
+    return () => {
+      wsDead.current = true;
+      if (wsRetry.current) clearTimeout(wsRetry.current);
+      if (wsRef.current) wsRef.current.close();
+    };
   }, [tableNum]);
 
   async function loadMenu() {
@@ -79,27 +88,9 @@ function connectWS() {
             console.error("Failed to parse WS message:", e);
         }
     };
-
-    ws.onclose = () => { 
-        // Only retry if not manually closed
-        wsRetry.current = setTimeout(connectWS, 4000); 
-    };
-    
-    ws.onerror = (err) => {
-        console.error("WebSocket Error:", err);
-        ws.close();
-    };
-
-    return ws; // Return instance to be managed by useEffect
-}
-
-useEffect(() => {
-    const ws = connectWS();
-    return () => {
-        if (wsRetry.current) clearTimeout(wsRetry.current);
-        ws.close();
-    };
-}, []);
+    ws.onclose = () => { wsRetry.current = setTimeout(connectWS, 4000); };
+    ws.onerror = () => ws.close();
+  }
 
   function addToCart(item: MenuItem) {
     if (!item.available) return;

@@ -137,7 +137,7 @@ func GetCost(database *sql.DB, code string) (int, error) {
 // CHANGED TO GET RECORDS
 // GetAllItems queries the DB and returns a slice of all menu items
 func GetAllItems(database *sql.DB) ([]MenuItem, error) {
-	rows, err := database.Query("SELECT id, item, code, cost FROM menu")
+	rows, err := database.Query("SELECT id, item, code, cost, availability FROM menu")
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func GetAllItems(database *sql.DB) ([]MenuItem, error) {
 	for rows.Next() {
 		var i MenuItem
 		// Scan directly into the struct's fields
-		err := rows.Scan(&i.ID, &i.Item, &i.Code, &i.Cost)
+		err := rows.Scan(&i.ID, &i.Item, &i.Code, &i.Cost, &i.Available)
 		if err != nil {
 			fmt.Println("Error getting row:", err)
 			continue
@@ -164,8 +164,9 @@ func GetAllItems(database *sql.DB) ([]MenuItem, error) {
 // TODO make separate data class for this
 
 type MenuItem struct {
-	ID   int    `json:"id"`
-	Item string `json:"item"`
-	Code string `json:"code"`
-	Cost int    `json:"cost"`
+	ID        int    `json:"id"`
+	Item      string `json:"item"`
+	Code      string `json:"code"`
+	Cost      int    `json:"cost"`
+	Available bool   `json:"available"`
 }
