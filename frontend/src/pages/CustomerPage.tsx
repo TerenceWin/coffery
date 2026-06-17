@@ -32,9 +32,18 @@ export default function CustomerPage() {
   const [cartOpen, setCartOpen]   = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wsRef   = useRef<WebSocket | null>(null);
+  const wsDead  = useRef(false);
 
   useEffect(() => {
-    if (tableNum) loadMenu();
+    if (!tableNum) return;
+    wsDead.current = false;
+    loadMenu();
+    return () => {
+      wsDead.current = true;
+      if (wsRetry.current) clearTimeout(wsRetry.current);
+      if (wsRef.current) wsRef.current.close();
+    };
   }, [tableNum]);
 
   async function loadMenu() {
@@ -52,8 +61,12 @@ export default function CustomerPage() {
 
   function connectWS() {
     if (wsRetry.current) clearTimeout(wsRetry.current);
+    if (wsRef.current) wsRef.current.close();
+
     const wsUrl = (import.meta.env.VITE_API_URL ?? 'http://coffery.onrender.com').replace('https://', 'wss://').replace('http://', 'ws://');
     const ws = new WebSocket(`${wsUrl}/ws`);
+    wsRef.current = ws;
+
     ws.onmessage = ({ data }) => {
       try {
         const msg = JSON.parse(data);
@@ -72,7 +85,9 @@ export default function CustomerPage() {
         }
       } catch { /* ignore malformed messages */ }
     };
-    ws.onclose = () => { wsRetry.current = setTimeout(connectWS, 4000); };
+    ws.onclose = () => {
+      if (!wsDead.current) wsRetry.current = setTimeout(connectWS, 4000);
+    };
     ws.onerror = () => ws.close();
   }
 
