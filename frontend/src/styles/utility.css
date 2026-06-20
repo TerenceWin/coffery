@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap');
+
+
+.hidden { display: none !important; }
+
+@media (max-width: 700px) {
+  .brand-panel { display: none; }
+  .form-panel { padding: 32px 20px; }
+  .main { padding: 20px 14px; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .welcome-hero { padding: 26px 22px; }
+  .welcome-hero h2 { font-size: 22px; }
+  .navbar { padding: 0 14px; }
+}
+
