@@ -7,13 +7,7 @@ import { useToast, ToastContainer } from '../components/Toast';
 import { getSession } from '../utils/storage';
 import { getEmoji } from '../utils/helpers';
 import api from '../services/api';
-
-interface MenuItem {
-  item: string;
-  code: string;
-  cost: number;
-  availability: boolean;
-}
+import { MenuItem } from '../models/MenuItem'
 
 export default function BossPage() {
   const { t } = useLang();
@@ -21,7 +15,7 @@ export default function BossPage() {
   const { toasts, toast } = useToast();
 
   const [session] = useState(() => getSession());
-  const [tab, setTab]         = useState<'menu' | 'qr'>('menu');
+  const [tab, setTab] = useState<'menu' | 'qr'>('menu');
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -33,11 +27,21 @@ export default function BossPage() {
   const [baseUrl, setBaseUrl] = useState('');
   const [tableCount, setTableCount] = useState(10);
   const [qrList, setQrList]   = useState<number[]>([]);
+  const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wsRef   = useRef<WebSocket | null>(null);
+  const wsDead  = useRef(false);
+
 
   useEffect(() => {
     if (!session || session.role !== 'boss') { navigate('/'); return; }
     setBaseUrl(window.location.origin + '/customer');
+    wsDead.current = false;
     loadMenu();
+    return () => {
+      wsDead.current = true;
+      if (wsRetry.current) clearTimeout(wsRetry.current);
+      if (wsRef.current) wsRef.current.close();
+    };
   }, []);
 
   async function loadMenu() {
@@ -86,10 +90,10 @@ export default function BossPage() {
   async function toggleAvail(code: string, avail: boolean) {
     try {
       await api.post('/update-availability', { code, avail });
-      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, availability: avail } : i));
+      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, available: avail } : i));
       toast(t('toastAvailOK'), 'ok');
     } catch {
-      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, availability: !avail } : i));
+      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, available: !avail } : i));
       toast(t('toastErrAvail'), 'err');
     }
   }
@@ -260,7 +264,7 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete }: {
   useEffect(() => setPrice(String(item.cost)), [item.cost]);
 
   return (
-    <div className={`item-card${!item.availability ? ' unavail' : ''}`} id={`card-${item.code}`}>
+    <div className={`item-card${!item.available ? ' unavail' : ''}`} id={`card-${item.code}`}>
       <div className="item-emoji-sm">{getEmoji(item.item)}</div>
       <div className="item-meta">
         <div className="item-meta-name">{item.item}</div>
@@ -276,7 +280,7 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete }: {
           />
         </div>
         <label className="toggle">
-          <input type="checkbox" checked={item.availability} onChange={e => onToggle(e.target.checked)} />
+          <input type="checkbox" checked={item.available} onChange={e => onToggle(e.target.checked)} />
           <span className="slider" />
         </label>
         <button className="btn-del" onClick={onDelete}>

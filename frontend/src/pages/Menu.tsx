@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
-
-interface MenuItem {
-  id: number
-  name: string
-  description: string
-  price: number
-}
+import { MenuItem } from '../models/MenuItem'
 
 export default function Menu() {
   const [items, setItems] = useState<MenuItem[]>([])
@@ -32,9 +26,9 @@ export default function Menu() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {items.map(item => (
             <div key={item.id} className="bg-white rounded-2xl shadow-md p-6">
-              <h2 className="text-xl font-semibold text-coffee-700">{item.name}</h2>
-              <p className="text-coffee-500 mt-1 text-sm">{item.description}</p>
-              <p className="text-coffee-800 font-bold mt-3">${item.price.toFixed(2)}</p>
+              <h2 className="text-xl font-semibold text-coffee-700">{item.code}</h2>
+              <p className="text-coffee-500 mt-1 text-sm">{item.item}</p>
+              <p className="text-coffee-800 font-bold mt-3">${item.cost.toFixed(2)}</p>
             </div>
           ))}
         </div>

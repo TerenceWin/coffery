@@ -7,13 +7,7 @@ import { placeOrder, callStaff } from '../utils/storage';
 import type { OrderItem } from '../utils/storage';
 import { getEmoji } from '../utils/helpers';
 import api from '../services/api';
-
-interface MenuItem {
-  item: string;
-  code: string;
-  cost: number;
-  available: boolean;
-}
+import { MenuItem } from '../models/MenuItem'
 
 interface CartEntry extends OrderItem {
   emoji: string;
@@ -268,7 +262,7 @@ function connectWS() {
               <div className="qty-ctrl">
                 <button className="qty-btn minus" onClick={() => removeFromCart(i.code)}>−</button>
                 <span className="qty-num">{i.qty}</span>
-                <button className="qty-btn plus" onClick={() => addToCart({ item: i.name, code: i.code, cost: i.price, available: true })}>+</button>
+                <button className="qty-btn plus" onClick={() => addToCart({item: i.name, code: i.code, cost: i.price, available: true })}>+</button>
               </div>
             </div>
           ))}
