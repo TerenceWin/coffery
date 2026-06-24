@@ -4,7 +4,7 @@ A full-stack monorepo for a coffee shop ordering system.
 
 - **Frontend** — React 18 + Vite, served on `http://localhost:3000`
 - **Backend** — Go + Gin REST API, served on `http://localhost:8080`
-- **Database** — PostgreSQL 16 via Docker
+- **Database** — PostgreSQL 16 served on Render
 
 ---
 
@@ -14,9 +14,7 @@ Make sure the following are installed on your machine before getting started.
 
 | Tool | Version | Purpose |
 |---|---|---|
-| [Node.js](https://nodejs.org) | 20+ | Run the frontend dev server |
 | [Go](https://golang.org/dl) | 1.23+ | Run the backend server |
-| [Docker Desktop](https://www.docker.com/products/docker-desktop) | Latest | Run PostgreSQL in a container |
 | [Git](https://git-scm.com/downloads) | Any | Version control |
 | [Make](https://www.gnu.org/software/make/) | Any | Run project commands (pre-installed on macOS/Linux, see Windows note below) |
 
