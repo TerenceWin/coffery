@@ -94,7 +94,7 @@
   display:flex; align-items:center; gap:10px;
   transition:var(--ease);
 }
-.item-card.unavail { opacity:.55; }
+/* .item-card.unavail { opacity:.55; } */
 .item-emoji-sm { font-size:28px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:var(--latte); border-radius:var(--r-md); flex-shrink:0; }
 .item-meta { flex:1; min-width:0; }
 .item-meta-name { font-size:14px; font-weight:700; color:var(--espresso); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -126,6 +126,11 @@
 }
 .toggle input:checked + .slider { background:var(--coffee); }
 .toggle input:checked + .slider:before { transform:translateX(18px); }
+
+/* Toggle off*/
+.item-card.unavail .item-emoji-sm { opacity:.5; }
+.item-card.unavail .item-meta { opacity:.5; }
+.item-card.unavail .price-wrap { opacity:.5; }
 
 /* Delete button */
 .btn-del {

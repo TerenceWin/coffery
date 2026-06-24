@@ -7,7 +7,8 @@ import { placeOrder, callStaff } from '../utils/storage';
 import type { OrderItem } from '../utils/storage';
 import { getEmoji } from '../utils/helpers';
 import api from '../services/api';
-import { MenuItem } from '../models/MenuItem'
+import { MenuItem } from '../models/MenuItem';
+import {AddToCartItem } from '../models/AddToCartItem';
 
 interface CartEntry extends OrderItem {
   emoji: string;
@@ -20,6 +21,7 @@ export default function CustomerPage() {
   const tableNum = searchParams.get('table');
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [addToCartItems, setAddToCartItems] = useState<AddToCartItem[]>([]);
   const [loading, setLoading]     = useState(false);
   const [loadErr, setLoadErr]     = useState('');
   const [cart, setCart]           = useState<Record<string, CartEntry>>({});
@@ -86,7 +88,7 @@ function connectWS() {
     ws.onerror = () => ws.close();
   }
 
-  function addToCart(item: MenuItem) {
+  function addToCart(item: AddToCartItem){
     if (!item.available) return;
     const emoji = getEmoji(item.item);
     setCart(prev => {

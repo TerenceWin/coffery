@@ -322,7 +322,7 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete }: {
       </div>
       <div className="item-controls">
         <div className="price-wrap">
-          <span>K</span>
+          <span>MMK</span>
           <input className="price-input" type="number" value={price}
             onChange={e => setPrice(e.target.value)}
             onBlur={() => onSavePrice(price)}
