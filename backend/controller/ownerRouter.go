@@ -89,7 +89,7 @@ func RegisterOwnerRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
 			Item      string `json:"item" binding:"required"`
 			Code      string `json:"code" binding:"required"`
 			Cost      int    `json:"cost" binding:"required"`
-			ImagePath string `json:"imagePatch" binding:"required"`
+			ImagePath string `json:"imagePath" binding:"required"`
 		}
 
 		if err := c.ShouldBindJSON(&input); err != nil {

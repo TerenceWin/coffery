@@ -51,11 +51,11 @@ func InitializeDB() *sql.DB {
 
 	alterQuery2 := `
     ALTER TABLE menu 
-    ADD COLUMN IF NOT EXISTS imagePatch TEXT DEFAULT true;`
+    ADD COLUMN IF NOT EXISTS imagePath TEXT DEFAULT true;`
 
 	_, err = database.Exec(alterQuery2)
 	if err != nil {
-		fmt.Println("Error adding imagePatch:", err)
+		fmt.Println("Error adding imagePath:", err)
 	}
 
 	return database

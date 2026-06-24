@@ -75,16 +75,10 @@ async function addItem() {
 
   setAdding(true);
 
-  const formData = new FormData();
-  formData.append('item', name);
-  formData.append('code', code);
-  formData.append('cost', String(price));
-  formData.append('imageName', newImageName);
+  console.log(name, code, price, newImageName);
 
   try {
-    await api.post('/add-item', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    await api.post('/add-item', { item: name, code, cost: price, imagePath: newImageName } );
     
     // Reset all form fields
     setNewName('');
