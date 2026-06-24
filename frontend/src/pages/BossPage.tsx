@@ -8,6 +8,10 @@ import { getSession } from '../utils/storage';
 import { getEmoji } from '../utils/helpers';
 import api from '../services/api';
 import { MenuItem } from '../models/MenuItem'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartSimple } from '@fortawesome/free-solid-svg-icons';
+import { faFile } from '@fortawesome/free-regular-svg-icons';
+import { faQrcode } from '@fortawesome/free-solid-svg-icons';
 
 export default function BossPage() {
   const { t } = useLang();
@@ -15,7 +19,7 @@ export default function BossPage() {
   const { toasts, toast } = useToast();
 
   const [session] = useState(() => getSession());
-  const [tab, setTab] = useState<'menu' | 'qr'>('menu');
+  const [tab, setTab] = useState<'menu' | 'qr' | 'report'>('menu');
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -26,21 +30,20 @@ export default function BossPage() {
   const [newImageName, setNewImageName] = useState('');
   const [newImage, setNewImage] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [adding, setAdding]   = useState(false);
   const [confirmItem, setConfirmItem] = useState<{ code: string; name: string } | null>(null);
-  const [baseUrl, setBaseUrl] = useState('');
-  const [tableCount, setTableCount] = useState(10);
+  const [tableCount, setTableCount] = useState(0);
   const [qrList, setQrList]   = useState<number[]>([]);
   const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wsRef   = useRef<WebSocket | null>(null);
   const wsDead  = useRef(false);
 
-
+  const baseUrl = `${window.location.origin}/customer`;
 
   useEffect(() => {
     if (!session || session.role !== 'boss') { navigate('/'); return; }
-    setBaseUrl(window.location.origin + '/customer');
     wsDead.current = false;
     loadMenu();
     return () => {
@@ -134,6 +137,16 @@ async function addItem() {
     }
   }
 
+  function downloadAll() {
+    const canvases = document.querySelectorAll<HTMLCanvasElement>('.qr-grid canvas');
+    canvases.forEach((canvas, i) => {
+      const a = document.createElement('a');
+      a.download = `hana-table-${i + 1}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+  }
+
   return (
     <div style={{ background: '#F5F1EC', minHeight: '100vh', fontFamily: "'Inter','Noto Sans Myanmar',sans-serif" }}>
 
@@ -143,18 +156,16 @@ async function addItem() {
       {/* Tabs */}
       <div className="dash-tabs">
         <button className={`dash-tab${tab === 'menu' ? ' active' : ''}`} onClick={() => setTab('menu')}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-          </svg>
+          <FontAwesomeIcon icon={faFile} />
           {t('menuMgmt')}
         </button>
-        <button className={`dash-tab${tab === 'qr' ? ' active' : ''}`} onClick={() => setTab('qr')}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/>
-            <path d="M14 14h.01M14 17h.01M17 14h.01M17 17h3M20 14v3"/>
-          </svg>
+        <button className={`dash-tab ${tab === 'qr' ? ' active' : ''}`} onClick={() => setTab('qr')}>
+          <FontAwesomeIcon icon={faQrcode} />
           {t('qrCodes')}
+        </button>
+        <button className={`dash-tab ${tab === 'report' ? 'active' : ''}`} onClick={()=> setTab('report')}>
+          <FontAwesomeIcon icon={faChartSimple} />
+          {t('reports')}
         </button>
       </div>
 
@@ -192,22 +203,29 @@ async function addItem() {
                     <input type="number" placeholder={t('phItemPrice')} value={newPrice}
                       onChange={e => setNewPrice(e.target.value)} min="1" />
                   </div>
-                  <div 
-                    className="drop-zone"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                        setFile(e.dataTransfer.files[0]);
-                        setNewImageName(e.dataTransfer.files[0].name); // Optional: auto-fill name
-                      }
-                    }}
-                  >
-                    {file ? (
-                      <p>Selected: {file.name}</p>
-                    ) : (
-                      <p>Drag & Drop image here</p>
-                    )}
+                  <div className="add-field">
+                    <label>{t('addImage')}</label>
+                    <input ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) { setFile(f); setNewImageName(f.name); }
+                      }}
+                    />
+                    <div
+                      className="drop-zone"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const f = e.dataTransfer.files?.[0];
+                        if (f) { setFile(f); setNewImageName(f.name); }
+                      }}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {file ? file.name : '＋'}
+                    </div>
                   </div>
 
                   <div className="add-field">
@@ -251,28 +269,23 @@ async function addItem() {
         <div className="dash-content active">
           <div className="qr-config">
             <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/>
-                <path d="M14 14h.01M14 17h.01M17 14h.01M17 17h3M20 14v3"/>
-              </svg>
+              <FontAwesomeIcon icon={faQrcode} />
               {t('generateQR')}
             </h3>
-            <div className="cfg-field">
-              <label>{t('baseUrl')}</label>
-              <input type="text" value={baseUrl} onChange={e => setBaseUrl(e.target.value)} />
-            </div>
             <div className="cfg-row">
               <div className="cfg-field">
                 <label>{t('tableCount')}</label>
                 <input type="number" value={tableCount} min={1} max={50}
-                  onChange={e => setTableCount(Math.min(50, parseInt(e.target.value) || 10))} />
+                  onChange={e => setTableCount(Math.min(50, parseInt(e.target.value)))}/>
               </div>
               <button className="btn-gen" onClick={() => setQrList(Array.from({ length: tableCount }, (_, i) => i + 1))}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
                 {t('generateQR')}
+              </button>
+              <button className="btn-gen" onClick={() => downloadAll()}>
+                {t('downloadAll')}
               </button>
             </div>
           </div>
