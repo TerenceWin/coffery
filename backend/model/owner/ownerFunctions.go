@@ -12,18 +12,18 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func InsertEntry(database *sql.DB, item string, code string, cost int) error {
+func InsertEntry(database *sql.DB, item string, code string, cost int, imagePath string) error {
 
 	// Making an sql statement with either prepare or query (query returns rows, Exec with a statement does not)
 	// Changed placeholders from ? in sqlite3 to $1, $2, $3 for Postgres
-	statement, err := database.Prepare("INSERT INTO menu (item, code, cost) VALUES ($1, $2, $3)")
+	statement, err := database.Prepare("INSERT INTO menu (item, code, cost, imagePath) VALUES ($1, $2, $3, $4)")
 
 	if err != nil {
 		return err
 	}
 	defer statement.Close() // Added: Prevents connection leaks
 
-	_, err = statement.Exec(item, code, cost)
+	_, err = statement.Exec(item, code, cost, imagePath)
 
 	if err != nil {
 		// Making a variable to hold the error that the postgres library will throw (23505 is the code for unique constraints)
@@ -148,8 +148,8 @@ func GetAllItems(database *sql.DB) ([]MenuItem, error) {
 
 	for rows.Next() {
 		var i MenuItem
-		// Scan directly into the struct's fields
-		err := rows.Scan(&i.ID, &i.Item, &i.Code, &i.Cost, &i.Available)
+		// Scan directly into the struct
+		err := rows.Scan(&i.ID, &i.Item, &i.Code, &i.Cost, &i.Available, &i.ImagePath)
 		if err != nil {
 			fmt.Println("Error getting row:", err)
 			continue
@@ -169,4 +169,5 @@ type MenuItem struct {
 	Code      string `json:"code"`
 	Cost      int    `json:"cost"`
 	Available bool   `json:"available"`
+	ImagePath string `json:"imagePath"`
 }

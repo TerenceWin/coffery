@@ -27,7 +27,8 @@ func InitializeDB() *sql.DB {
         item TEXT UNIQUE, 
         code TEXT UNIQUE, 
         cost INTEGER,
-        availability BOOLEAN DEFAULT true
+        availability BOOLEAN DEFAULT true,
+		imagePath TEXT
     )`
 
 	// Defer executes once the return statement is executed. Executed by LIFO
@@ -35,6 +36,8 @@ func InitializeDB() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
+
+	// Remove these manual entries later
 
 	// Automatically add the column if it's missing
 	alterQuery := `
@@ -44,6 +47,15 @@ func InitializeDB() *sql.DB {
 	_, err = database.Exec(alterQuery)
 	if err != nil {
 		fmt.Println("Error adding column:", err) // Just log it, don't panic
+	}
+
+	alterQuery2 := `
+    ALTER TABLE menu 
+    ADD COLUMN IF NOT EXISTS imagePatch TEXT DEFAULT true;`
+
+	_, err = database.Exec(alterQuery2)
+	if err != nil {
+		fmt.Println("Error adding imagePatch:", err)
 	}
 
 	return database

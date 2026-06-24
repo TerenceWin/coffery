@@ -4,4 +4,5 @@ export interface MenuItem {
   code: string;
   cost: number;
   available: boolean;
+  imagePath: string
 }

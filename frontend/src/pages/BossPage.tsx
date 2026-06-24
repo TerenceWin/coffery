@@ -19,9 +19,14 @@ export default function BossPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+
   const [newName, setNewName] = useState('');
   const [newCode, setNewCode] = useState('');
   const [newPrice, setNewPrice] = useState('');
+  const [newImageName, setNewImageName] = useState('');
+  const [newImage, setNewImage] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+
   const [adding, setAdding]   = useState(false);
   const [confirmItem, setConfirmItem] = useState<{ code: string; name: string } | null>(null);
   const [baseUrl, setBaseUrl] = useState('');
@@ -30,6 +35,7 @@ export default function BossPage() {
   const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wsRef   = useRef<WebSocket | null>(null);
   const wsDead  = useRef(false);
+
 
 
   useEffect(() => {
@@ -56,24 +62,47 @@ export default function BossPage() {
     }
   }
 
-  async function addItem() {
-    const name  = newName.trim();
-    const code  = newCode.trim().toUpperCase();
-    const price = parseInt(newPrice);
-    if (!name || !code || !price || price < 1) return;
-    setAdding(true);
-    try {
-      await api.post('/add-item', { item: name, code, cost: price });
-      setNewName(''); setNewCode(''); setNewPrice('');
-      setAddOpen(false);
-      toast(t('toastAdded'), 'ok');
-      await loadMenu();
-    } catch (err) {
-      toast(t('toastErrAdd') + ' — ' + (err as Error).message, 'err');
-    } finally {
-      setAdding(false);
-    }
+async function addItem() {
+  const name = newName.trim();
+  const code = newCode.trim().toUpperCase();
+  const price = parseInt(newPrice);
+  
+  // Ensure all required fields including the file are provided
+  if (!name || !code || !price || !file) {
+    toast(t('fillAllFields'), 'err'); 
+    return;
   }
+
+  setAdding(true);
+
+  const formData = new FormData();
+  formData.append('item', name);
+  formData.append('code', code);
+  formData.append('cost', String(price));
+  formData.append('imageName', newImageName);
+
+  try {
+    await api.post('/add-item', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    
+    // Reset all form fields
+    setNewName('');
+    setNewCode('');
+    setNewPrice('');
+    setNewImageName('');
+    setNewImage(''); // Added reset for newImage state
+    setFile(null);
+    
+    setAddOpen(false);
+    toast(t('toastAdded'), 'ok');
+    await loadMenu();
+  } catch (err) {
+    toast(t('toastErrAdd') + ' — ' + (err as Error).message, 'err');
+  } finally {
+    setAdding(false);
+  }
+}
 
   async function savePrice(code: string, value: string, original: number) {
     const newCost = parseInt(value);
@@ -168,6 +197,33 @@ export default function BossPage() {
                     <label>{t('itemPrice')}</label>
                     <input type="number" placeholder={t('phItemPrice')} value={newPrice}
                       onChange={e => setNewPrice(e.target.value)} min="1" />
+                  </div>
+                  <div 
+                    className="drop-zone"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        setFile(e.dataTransfer.files[0]);
+                        setNewImageName(e.dataTransfer.files[0].name); // Optional: auto-fill name
+                      }
+                    }}
+                  >
+                    {file ? (
+                      <p>Selected: {file.name}</p>
+                    ) : (
+                      <p>Drag & Drop image here</p>
+                    )}
+                  </div>
+
+                  <div className="add-field">
+                    <label>Save as Name:</label>
+                    <input 
+                      type="text" 
+                      value={newImageName} 
+                      onChange={(e) => setNewImageName(e.target.value)} 
+                      placeholder="e.g. burger.jpg"
+                    />
                   </div>
                 </div>
                 <button className="btn-add" onClick={addItem} disabled={adding}>

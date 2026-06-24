@@ -86,9 +86,10 @@ func RegisterOwnerRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
 	// JSON from the frontend {"item": "Espresso", "code": "E01", "cost": 350}
 	router.POST("/add-item", func(c *gin.Context) {
 		var input struct {
-			Item string `json:"item" binding:"required"`
-			Code string `json:"code" binding:"required"`
-			Cost int    `json:"cost" binding:"required"`
+			Item      string `json:"item" binding:"required"`
+			Code      string `json:"code" binding:"required"`
+			Cost      int    `json:"cost" binding:"required"`
+			ImagePath string `json:"imagePatch" binding:"required"`
 		}
 
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -96,7 +97,7 @@ func RegisterOwnerRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
 			return
 		}
 
-		err := owner.InsertEntry(db, input.Item, input.Code, input.Cost)
+		err := owner.InsertEntry(db, input.Item, input.Code, input.Cost, input.ImagePath)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
