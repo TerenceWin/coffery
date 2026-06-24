@@ -137,7 +137,7 @@ func GetCost(database *sql.DB, code string) (int, error) {
 // CHANGED TO GET RECORDS
 // GetAllItems queries the DB and returns a slice of all menu items
 func GetAllItems(database *sql.DB) ([]MenuItem, error) {
-	rows, err := database.Query("SELECT id, item, code, cost, availability FROM menu")
+	rows, err := database.Query("SELECT id, item, code, cost, availability, imagePath FROM menu")
 	if err != nil {
 		return nil, err
 	}

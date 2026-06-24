@@ -216,7 +216,7 @@ async function addItem() {
                       type="text" 
                       value={newImageName} 
                       onChange={(e) => setNewImageName(e.target.value)} 
-                      placeholder="e.g. burger.jpg"
+                      placeholder="e.g. coffee.jpg"
                     />
                   </div>
                 </div>
