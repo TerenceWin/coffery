@@ -246,7 +246,7 @@ async function addItem() {
             )}
           </div>
 
-          <p className="section-label">{menuItems.length} items</p>
+          <p className="section-label">{menuItems.length} items</p> 
 
           {loading ? (
             <div className="state-box"><div className="spinner-sm" /><p>Loading...</p></div>
