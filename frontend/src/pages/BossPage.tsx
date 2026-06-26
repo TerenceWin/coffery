@@ -56,7 +56,7 @@ export default function BossPage() {
   async function loadMenu() {
     setLoading(true);
     try {
-      const res = await api.get<MenuItem[]>('/menu');
+      const res = await api.get<MenuItem[]>('/menu-items');
       setMenuItems(res.data ?? []);
     } catch {
       toast(t('loadFailed'), 'err');
@@ -78,10 +78,8 @@ async function addItem() {
 
   setAdding(true);
 
-  console.log(name, code, price, newImageName);
-
   try {
-    await api.post('/add-item', { item: name, code, cost: price, imagePath: newImageName } );
+    await api.post('/menu-items', { item: name, code, cost: price, imagePath: newImageName } );
     
     // Reset all form fields
     setNewName('');
@@ -105,7 +103,7 @@ async function addItem() {
     const newCost = parseInt(value);
     if (isNaN(newCost) || newCost < 1 || newCost === original) return;
     try {
-      await api.post('/update-cost', { code, price: newCost });
+      await api.patch(`/menu-items/${code}/cost`, { price: newCost });
       setMenuItems(prev => prev.map(i => i.code === code ? { ...i, cost: newCost } : i));
       toast(t('toastPriceOK'), 'ok');
     } catch {
@@ -115,7 +113,7 @@ async function addItem() {
   
   async function toggleAvail(code: string, avail: boolean) {
     try {
-      await api.post('/update-availability', { code, avail });
+      await api.post(`/menu-items/${code}/availability`, { avail });
       setMenuItems(prev => prev.map(i => i.code === code ? { ...i, available: avail } : i));
       toast(t('toastAvailOK'), 'ok');
     } catch {
@@ -129,7 +127,7 @@ async function addItem() {
     const code = confirmItem.code;
     setConfirmItem(null);
     try {
-      await api.delete(`/delete-item/${code}`);
+      await api.delete(`/menu-items/${code}`);
       setMenuItems(prev => prev.filter(i => i.code !== code));
       toast(t('toastDeleted'), 'ok');
     } catch {

@@ -45,7 +45,7 @@ export default function CustomerPage() {
   async function loadMenu() {
     setLoading(true); setLoadErr('');
     try {
-      const res = await api.get<MenuItem[]>('/menu');
+      const res = await api.get<MenuItem[]>('/menu-items');
       setMenuItems(res.data);
       connectWS();
     } catch (err) {

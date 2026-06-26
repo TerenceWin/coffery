@@ -28,7 +28,7 @@ func main() {
 	router.Use(cors.Default())
 
 	// Register all owner-related handlers from the controller package
-	controller.RegisterOwnerRoutes(router, db, myHub)
+	controller.RegisterMenuRoutes(router, db, myHub)
 
 	// Exposes the websocket so can update when changed
 	router.GET("/ws", func(c *gin.Context) {
