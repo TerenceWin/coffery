@@ -113,7 +113,7 @@ async function addItem() {
   
   async function toggleAvail(code: string, avail: boolean) {
     try {
-      await api.post(`/menu-items/${code}/availability`, { avail });
+      await api.patch(`/menu-items/${code}/availability`, { avail });
       setMenuItems(prev => prev.map(i => i.code === code ? { ...i, available: avail } : i));
       toast(t('toastAvailOK'), 'ok');
     } catch {
