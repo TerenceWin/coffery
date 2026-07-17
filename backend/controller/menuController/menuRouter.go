@@ -1,4 +1,4 @@
-package controller
+package menuController
 
 import (
 	"cafe-app-backend/crudAPI/crudMenu"

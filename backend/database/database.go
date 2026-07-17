@@ -58,5 +58,22 @@ func InitializeDB() *sql.DB {
 		fmt.Println("Error adding imagePath:", err)
 	}
 
+	// Creating the table for transactions/orders
+	transactionsQuery := `
+    CREATE TABLE IF NOT EXISTS transactions (
+        id SERIAL PRIMARY KEY,
+        table_num TEXT NOT NULL,
+        items JSONB NOT NULL,
+        total INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_by INTEGER,
+        created_at TIMESTAMP DEFAULT now()
+    )`
+
+	_, err = database.Exec(transactionsQuery)
+	if err != nil {
+		panic(err)
+	}
+
 	return database
 }

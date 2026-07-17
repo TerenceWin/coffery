@@ -2,6 +2,8 @@ package main
 
 import (
 	"cafe-app-backend/controller"
+	"cafe-app-backend/controller/menuController"
+	"cafe-app-backend/controller/transactionController"
 	"cafe-app-backend/database"
 	"cafe-app-backend/hub"
 	"net/http"
@@ -28,7 +30,10 @@ func main() {
 	router.Use(cors.Default())
 
 	// Register all owner-related handlers from the controller package
-	controller.RegisterMenuRoutes(router, db, myHub)
+	menuController.RegisterMenuRoutes(router, db, myHub)
+
+	// Register order/transaction handlers
+	transactionController.RegisterTransactionRoutes(router, db, myHub)
 
 	// Exposes the websocket so can update when changed
 	router.GET("/ws", func(c *gin.Context) {
