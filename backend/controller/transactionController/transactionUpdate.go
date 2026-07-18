@@ -1,4 +1,4 @@
-package controller
+package transactionController
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ var validStatuses = map[string]bool{
 	"cancelled": true,
 }
 
-// UpdateStatus flips a transaction's status - e.g. staff marks an order "paid"
+// UpdateStatus flips a transaction's status
 // once cash/card has actually been collected at the counter.
 func (ctrl *TransactionController) UpdateStatus(c *gin.Context) {
 	idParam := c.Param("id")

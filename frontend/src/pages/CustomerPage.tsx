@@ -114,13 +114,17 @@ function connectWS() {
   function cartTotal() { return Object.values(cart).reduce((s, i) => s + i.price * i.qty, 0); }
   function cartCount() { return Object.values(cart).reduce((s, i) => s + i.qty, 0); }
 
-  function submitOrder() {
+  async function submitOrder() {
     const items = Object.values(cart);
     if (!items.length || !tableNum) return;
-    placeOrder(tableNum, items);
-    setCart({});
-    setOrderPlaced(true);
-    setTimeout(() => { setCartOpen(false); setOrderPlaced(false); }, 2200);
+    try {
+      await placeOrder(tableNum, items);
+      setCart({});
+      setOrderPlaced(true);
+      setTimeout(() => { setCartOpen(false); setOrderPlaced(false); }, 2200);
+    } catch {
+      toast(t('orderFailed'), 'err');
+    }
   }
 
   function handleCallStaff() {

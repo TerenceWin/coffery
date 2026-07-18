@@ -23,16 +23,54 @@ export default function StaffPage() {
 
   const prevPendingCount = useRef(-1);
   const prevCallCount    = useRef(-1);
+  const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wsRef   = useRef<WebSocket | null>(null);
+  const wsDead  = useRef(false);
 
   useEffect(() => {
     if (!session || session.role !== 'staff') { navigate('/'); return; }
+    wsDead.current = false;
     refresh();
-    const id = setInterval(refresh, 3000);
-    return () => clearInterval(id);
+    connectWS();
+    const id = setInterval(refresh, 3000); // fallback poll in case the socket drops
+    return () => {
+      wsDead.current = true;
+      clearInterval(id);
+      if (wsRetry.current) clearTimeout(wsRetry.current);
+      if (wsRef.current) wsRef.current.close();
+    };
   }, []);
 
-  function refresh() {
-    const allOrders = getOrders();
+  function connectWS() {
+    if (wsDead.current) return;
+    if (wsRetry.current) clearTimeout(wsRetry.current);
+
+    const wsUrl = 'wss://coffery.onrender.com';
+    const ws = new WebSocket(`${wsUrl}/ws`);
+    wsRef.current = ws;
+
+    ws.onmessage = ({ data }) => {
+      try {
+        const msg = JSON.parse(data);
+        if (msg.type === 'new_transaction' || msg.type === 'transaction_status_update') {
+          refresh();
+        }
+      } catch (e) {
+        console.error('Failed to parse WS message:', e);
+      }
+    };
+    ws.onclose = () => { if (!wsDead.current) wsRetry.current = setTimeout(connectWS, 4000); };
+    ws.onerror = () => ws.close();
+  }
+
+  async function refresh() {
+    let allOrders: Order[] = [];
+    try {
+      allOrders = await getOrders();
+    } catch {
+      toast(t('loadOrdersFailed'), 'err');
+      return;
+    }
     const activeCalls = getCalls().filter(c => !c.handled);
 
     const pending = allOrders.filter(o => o.status === 'pending');
@@ -67,20 +105,28 @@ export default function StaffPage() {
     toast(t('toastDismissed'), 'ok');
   }
 
-  function confirmPayment() {
+  async function confirmPayment() {
     if (!checkoutOrder) return;
-    setOrderStatus(checkoutOrder.id, 'paid');
-    setCheckoutOrder(null);
-    toast(t('toastPayment'), 'ok');
-    refresh();
+    try {
+      await setOrderStatus(checkoutOrder.id, 'paid');
+      setCheckoutOrder(null);
+      toast(t('toastPayment'), 'ok');
+      refresh();
+    } catch {
+      toast(t('statusUpdateFailed'), 'err');
+    }
   }
 
-  function confirmCancel() {
+  async function confirmCancel() {
     if (!cancelOrder) return;
-    setOrderStatus(cancelOrder.id, 'cancelled');
-    setCancelOrder(null);
-    toast(t('toastCancelled'), 'err');
-    refresh();
+    try {
+      await setOrderStatus(cancelOrder.id, 'cancelled');
+      setCancelOrder(null);
+      toast(t('toastCancelled'), 'err');
+      refresh();
+    } catch {
+      toast(t('statusUpdateFailed'), 'err');
+    }
   }
 
   const pending = orders.filter(o => o.status === 'pending');

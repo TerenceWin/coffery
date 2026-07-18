@@ -1,4 +1,4 @@
-package controller
+package transactionController
 
 import (
 	"encoding/json"
@@ -16,6 +16,7 @@ func (ctrl *TransactionController) Create(c *gin.Context) {
 		TableNum string `json:"tableNum" binding:"required"`
 		Items    []struct {
 			Name  string `json:"name"`
+			Code  string `json:"code"`
 			Price int    `json:"price"`
 			Qty   int    `json:"qty"`
 		} `json:"items" binding:"required"`

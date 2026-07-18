@@ -1,4 +1,4 @@
-package controller
+package transactionController
 
 import (
 	"net/http"

@@ -1,6 +1,5 @@
 const DB_KEY      = 'hanaCoffeeDB';
 const SESSION_KEY = 'hanaCoffeeSession';
-const ORDERS_KEY  = 'hanaCoffeeOrders';
 const CALLS_KEY   = 'hanaCoffeeCalls';
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
@@ -45,6 +44,12 @@ export function clearSession() {
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────────
+// Backed by the Go backend's /transactions endpoints (see backend/controller/transaction*.go).
+// localStorage is no longer used for orders - ORDERS_KEY is kept only so any
+// stale data from before this change doesn't linger.
+
+import api from '../services/api';
+import { getEmoji } from './helpers';
 
 export interface OrderItem {
   emoji: string;
@@ -63,31 +68,62 @@ export interface Order {
   createdAt: string;
 }
 
-export function getOrders(): Order[] {
-  return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+// Raw shape returned by the Go backend (backend/model/transaction.go).
+// `items` comes back as a JSON-encoded string since the DB column is JSONB
+// and the Go struct field is typed as `string`.
+interface RawTransaction {
+  id: number;
+  tableNum: string;
+  items: string;
+  total: number;
+  status: 'pending' | 'cancelled' | 'paid';
+  createdBy: number;
+  createdAt: string;
 }
 
-export function placeOrder(tableNum: string, items: OrderItem[]): Order {
-  const orders = getOrders();
-  const total  = items.reduce((s, i) => s + i.price * i.qty, 0);
-  const order: Order = {
-    id: 'ord_' + Date.now(),
+function parseTransaction(tx: RawTransaction): Order {
+  let rawItems: { name: string; code: string; price: number; qty: number }[] = [];
+  try {
+    rawItems = JSON.parse(tx.items);
+  } catch {
+    rawItems = [];
+  }
+  return {
+    id: String(tx.id),
+    tableNum: tx.tableNum,
+    items: rawItems.map(i => ({ ...i, emoji: getEmoji(i.name) })),
+    total: tx.total,
+    status: tx.status,
+    createdAt: tx.createdAt,
+  };
+}
+
+export async function getOrders(): Promise<Order[]> {
+  const res = await api.get<RawTransaction[]>('/transactions');
+  return (res.data ?? []).map(parseTransaction);
+}
+
+export async function placeOrder(tableNum: string, items: OrderItem[]): Promise<Order> {
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const payload = {
+    tableNum,
+    items: items.map(i => ({ name: i.name, code: i.code, price: i.price, qty: i.qty })),
+    total,
+    createdBy: 0, // no real auth yet - placeholder until login is wired up
+  };
+  const res = await api.post<{ id: number }>('/transactions', payload);
+  return {
+    id: String(res.data.id),
     tableNum,
     items,
     total,
     status: 'pending',
     createdAt: new Date().toISOString(),
   };
-  orders.unshift(order);
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  return order;
 }
 
-export function setOrderStatus(orderId: string, status: Order['status']) {
-  const orders = getOrders();
-  const o = orders.find(x => x.id === orderId);
-  if (o) { o.status = status; localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)); }
-  return o;
+export async function setOrderStatus(orderId: string, status: Order['status']): Promise<void> {
+  await api.patch(`/transactions/${orderId}/status`, { status });
 }
 
 // ── Calls ─────────────────────────────────────────────────────────────────────
