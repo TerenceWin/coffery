@@ -21,7 +21,6 @@ export default function CustomerPage() {
   const tableNum = searchParams.get('table');
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [addToCartItems, setAddToCartItems] = useState<AddToCartItem[]>([]);
   const [loading, setLoading]     = useState(false);
   const [loadErr, setLoadErr]     = useState('');
   const [cart, setCart]           = useState<Record<string, CartEntry>>({});

@@ -32,7 +32,7 @@ export default function StaffPage() {
     wsDead.current = false;
     refresh();
     connectWS();
-    const id = setInterval(refresh, 3000); // fallback poll in case the socket drops
+    const id = setInterval(refresh, 20000); // fallback poll in case the socket drops
     return () => {
       wsDead.current = true;
       clearInterval(id);

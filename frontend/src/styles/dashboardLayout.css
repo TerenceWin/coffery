@@ -277,3 +277,16 @@ tr:hover td { background: var(--ivory); }
 }
 .btn-icon svg { width: 15px; height: 15px; }
 .btn-icon.del:hover { background: var(--error-bg); color: var(--error); }
+
+/* Status pill - shared by StaffPage order cards and Boss reports table */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--r-full);
+  white-space: nowrap;
+}
+.status-pill.paid      { background: #E6F4EC; color: #1A6B3A; }
+.status-pill.cancelled { background: var(--error-bg); color: var(--error); }
