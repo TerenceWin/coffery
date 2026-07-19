@@ -58,7 +58,7 @@ function connectWS() {
     if (wsRetry.current) clearTimeout(wsRetry.current);
     
     // Use wss:// for secure connections on Render
-    const wsUrl = 'wss://coffery.onrender.com';
+    const wsUrl = 'wss://hanacoffee.onrender.com';
     const ws = new WebSocket(`${wsUrl}/ws`);
 
     ws.onmessage = ({ data }) => {
