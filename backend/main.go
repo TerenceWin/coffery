@@ -39,6 +39,9 @@ func main() {
 	// Register login/logout handlers
 	authenticationController.RegisterAuthRoutes(router, db)
 
+	// Register boss-only account management (create/list/delete staff accounts)
+	authenticationController.RegisterUserRoutes(router, db)
+
 	// Exposes the websocket so can update when changed
 	router.GET("/ws", func(c *gin.Context) {
 		controller.HandleWS(myHub, c.Writer, c.Request)

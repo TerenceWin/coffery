@@ -24,6 +24,7 @@ func RegisterAuthRoutes(router *gin.Engine, db *sql.DB) {
 	{
 		authGroup.POST("/login", ctrl.Login)
 		authGroup.POST("/logout", auth.RequireAuth(), ctrl.Logout)
+		authGroup.PATCH("/password", auth.RequireAuth(), ctrl.ChangePassword)
 	}
 }
 
@@ -88,4 +89,48 @@ func (ctrl *AuthController) Logout(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
+// ChangePassword lets the currently logged-in user change their own
+// password. Requires the current password to be correct first.
+func (ctrl *AuthController) ChangePassword(c *gin.Context) {
+	var input struct {
+		OldPassword string `json:"oldPassword" binding:"required"`
+		NewPassword string `json:"newPassword" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	if len(input.NewPassword) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "New password must be at least 6 characters"})
+		return
+	}
+
+	userIDVal, _ := c.Get("userID")
+	userID, _ := userIDVal.(int)
+
+	user, err := ctrl.store.GetByID(userID)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Account not found"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.OldPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Current password is incorrect"})
+		return
+	}
+
+	newHash, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to secure new password"})
+		return
+	}
+
+	if err := ctrl.store.UpdatePasswordHash(userID, string(newHash)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }

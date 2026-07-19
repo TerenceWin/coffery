@@ -130,11 +130,6 @@ export default function LoginPage() {
               </svg>
             </button>
           </form>
-
-          <div className="hint-box">
-            <div className="hint-label">{t('demoAccount')}</div>
-            <div dangerouslySetInnerHTML={{ __html: role === 'boss' ? t('hintBoss') : t('hintStaff') }} />
-          </div>
         </div>
       </div>
     </div>

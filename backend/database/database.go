@@ -96,23 +96,45 @@ func InitializeDB() *sql.DB {
 	return database
 }
 
-// seedDefaultUsers creates the demo boss/staff accounts the first time the
-// app runs against a fresh database, so the login screen's hinted demo
-// credentials keep working. It's a no-op if accounts already exist.
+// seedDefaultUsers creates an initial boss/staff account ONLY if the
+// corresponding environment variables are set - there is no hardcoded
+// username/password anywhere in this codebase. If you don't set these
+// env vars, no accounts are created and nobody can log in until you
+// insert one yourself.
+//
+// Set these in Render's environment variables (never commit them):
+//
+//	SEED_BOSS_USERNAME, SEED_BOSS_PASSWORD, SEED_BOSS_NAME
+//	SEED_STAFF_USERNAME, SEED_STAFF_PASSWORD, SEED_STAFF_NAME (optional -
+//	once a boss account exists, new staff should be created through the
+//	app's account management instead)
 func seedDefaultUsers(database *sql.DB) {
-	defaults := []struct {
-		username string
-		password string
-		role     string
-		name     string
-	}{
-		{"boss", "boss123", "boss", "Admin Boss"},
-		{"staff001", "staff123", "staff", "Staff 1"},
+	type seed struct {
+		usernameEnv  string
+		passwordEnv  string
+		nameEnv      string
+		role         string
+		fallbackName string
 	}
 
-	for _, u := range defaults {
+	seeds := []seed{
+		{"SEED_BOSS_USERNAME", "SEED_BOSS_PASSWORD", "SEED_BOSS_NAME", "boss", "Admin Boss"},
+		{"SEED_STAFF_USERNAME", "SEED_STAFF_PASSWORD", "SEED_STAFF_NAME", "staff", "Staff"},
+	}
+
+	for _, s := range seeds {
+		username := os.Getenv(s.usernameEnv)
+		password := os.Getenv(s.passwordEnv)
+		if username == "" || password == "" {
+			continue // not configured for this role - expected until you set the env vars
+		}
+		name := os.Getenv(s.nameEnv)
+		if name == "" {
+			name = s.fallbackName
+		}
+
 		var exists int
-		err := database.QueryRow("SELECT COUNT(*) FROM users WHERE username = $1", u.username).Scan(&exists)
+		err := database.QueryRow("SELECT COUNT(*) FROM users WHERE username = $1", username).Scan(&exists)
 		if err != nil {
 			fmt.Println("Error checking for existing user:", err)
 			continue
@@ -121,15 +143,15 @@ func seedDefaultUsers(database *sql.DB) {
 			continue
 		}
 
-		hash, err := bcrypt.GenerateFromPassword([]byte(u.password), bcrypt.DefaultCost)
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
-			fmt.Println("Error hashing default password:", err)
+			fmt.Println("Error hashing seed password:", err)
 			continue
 		}
 
 		_, err = database.Exec(
 			"INSERT INTO users (username, password_hash, role, name) VALUES ($1, $2, $3, $4)",
-			u.username, string(hash), u.role, u.name,
+			username, string(hash), s.role, name,
 		)
 		if err != nil {
 			fmt.Println("Error seeding default user:", err)

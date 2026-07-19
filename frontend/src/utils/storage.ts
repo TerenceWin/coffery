@@ -50,6 +50,35 @@ export async function clearSession(): Promise<void> {
   }
 }
 
+// Changes the currently logged-in user's own password. Throws with the
+// backend's error message (e.g. "Current password is incorrect") on failure.
+export async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
+  await api.patch('/auth/password', { oldPassword, newPassword });
+}
+
+// ── Accounts (boss-only) ──────────────────────────────────────────────────────
+// Backed by /users - see backend/controller/authenticationController/userRouter.go
+
+export interface Account {
+  id: number;
+  username: string;
+  role: 'boss' | 'staff';
+  name: string;
+}
+
+export async function getAccounts(): Promise<Account[]> {
+  const res = await api.get<Account[]>('/users');
+  return res.data ?? [];
+}
+
+export async function createAccount(username: string, password: string, role: 'boss' | 'staff', name: string): Promise<void> {
+  await api.post('/users', { username, password, role, name });
+}
+
+export async function deleteAccount(id: number): Promise<void> {
+  await api.delete(`/users/${id}`);
+}
+
 // ── Orders ────────────────────────────────────────────────────────────────────
 // Backed by the Go backend's /transactions endpoints (see backend/controller/transaction*.go).
 
