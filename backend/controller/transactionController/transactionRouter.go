@@ -1,6 +1,7 @@
 package transactionController
 
 import (
+	"cafe-app-backend/auth"
 	"cafe-app-backend/crudAPI/crudTransaction"
 	"cafe-app-backend/hub"
 	"database/sql"
@@ -24,9 +25,8 @@ func RegisterTransactionRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
 	{
 		transactions.GET("", ctrl.GetAll)
 		transactions.POST("", ctrl.Create)
-		// NOTE: once auth middleware exists, wrap this route so only
-		// staff/boss-role JWTs can call it - customers should never
-		// be able to mark their own order "paid".
-		transactions.PATCH("/:id/status", ctrl.UpdateStatus)
+		// Only staff/boss-role JWTs can flip an order's status -
+		// customers should never be able to mark their own order "paid".
+		transactions.PATCH("/:id/status", auth.RequireAuth("staff", "boss"), ctrl.UpdateStatus)
 	}
 }

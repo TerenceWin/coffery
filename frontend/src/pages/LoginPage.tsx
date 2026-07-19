@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import LangSwitcher from '../components/LangSwitcher';
-import { initDB, login, getSession } from '../utils/storage';
+import { login, getSession } from '../utils/storage';
 
 export default function LoginPage() {
   const { t } = useLang();
@@ -15,7 +15,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    initDB();
     const s = getSession();
     if (s) navigate(s.role === 'staff' ? '/staff' : '/dashboard', { replace: true });
   }, [navigate]);
@@ -27,16 +26,21 @@ export default function LoginPage() {
     setErrMsg('');
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!username || !password) { setErrMsg(t('errFillAll')); return; }
     setLoading(true);
-    const session = login(role, username, password);
-    if (session) {
-      setTimeout(() => navigate(session.role === 'staff' ? '/staff' : '/dashboard'), 500);
-    } else {
-      setErrMsg(t('errWrongCreds'));
-      setPassword('');
+    try {
+      const session = await login(role, username, password);
+      if (session) {
+        setTimeout(() => navigate(session.role === 'staff' ? '/staff' : '/dashboard'), 500);
+      } else {
+        setErrMsg(t('errWrongCreds'));
+        setPassword('');
+        setLoading(false);
+      }
+    } catch {
+      setErrMsg(t('errNetwork'));
       setLoading(false);
     }
   }

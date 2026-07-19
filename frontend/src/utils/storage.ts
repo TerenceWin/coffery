@@ -1,20 +1,12 @@
-const DB_KEY      = 'hanaCoffeeDB';
 const SESSION_KEY = 'hanaCoffeeSession';
+const TOKEN_KEY    = 'token'; // matches the key api.ts already reads for Authorization headers
 const CALLS_KEY   = 'hanaCoffeeCalls';
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
+// Backed by the Go backend's /auth/login and /auth/logout endpoints
+// (see backend/controller/authRouter.go and backend/auth/*.go).
 
-export function initDB() {
-  if (localStorage.getItem(DB_KEY)) return;
-  localStorage.setItem(DB_KEY, JSON.stringify({
-    nextId: 10,
-    users: {
-      boss:     [{ id: 1, username: 'boss',     password: 'boss123',  name: 'Admin Boss' }],
-      staff:    [{ id: 2, username: 'staff001', password: 'staff123', name: 'Staff 1' }],
-      customer: [{ id: 3, username: 'user001',  password: 'user123',  name: 'Customer 1' }],
-    },
-  }));
-}
+import api from '../services/api';
 
 export interface Session {
   id: number;
@@ -23,15 +15,19 @@ export interface Session {
   role: string;
 }
 
-export function login(role: string, username: string, password: string): Session | null {
-  const db = JSON.parse(localStorage.getItem(DB_KEY) || '{}');
-  const user = (db.users?.[role] || []).find(
-    (u: { username: string; password: string }) => u.username === username && u.password === password,
-  );
-  if (!user) return null;
-  const session: Session = { id: user.id, username: user.username, name: user.name, role };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  return session;
+// Returns the session on success, or null if the credentials were wrong.
+// Throws only on a genuine network/server failure (backend unreachable, etc).
+export async function login(role: string, username: string, password: string): Promise<Session | null> {
+  try {
+    const res = await api.post<{ token: string; user: Session }>('/auth/login', { role, username, password });
+    localStorage.setItem(TOKEN_KEY, res.data.token);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(res.data.user));
+    return res.data.user;
+  } catch (err) {
+    const status = (err as { response?: { status?: number } }).response?.status;
+    if (status === 401) return null; // wrong username/password/role
+    throw err; // genuine network/server error - let the caller show a different message
+  }
 }
 
 export function getSession(): Session | null {
@@ -39,16 +35,24 @@ export function getSession(): Session | null {
   return raw ? JSON.parse(raw) : null;
 }
 
-export function clearSession() {
-  localStorage.removeItem(SESSION_KEY);
+// Calls the backend to revoke the current token (so it can't be reused
+// even if it leaked), then clears local state regardless of whether that
+// call succeeds - you should always end up logged out client-side.
+export async function clearSession(): Promise<void> {
+  try {
+    await api.post('/auth/logout');
+  } catch {
+    // Token may already be expired/invalid - that's fine, we're logging
+    // out either way. Don't block the user on this.
+  } finally {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(SESSION_KEY);
+  }
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 // Backed by the Go backend's /transactions endpoints (see backend/controller/transaction*.go).
-// localStorage is no longer used for orders - ORDERS_KEY is kept only so any
-// stale data from before this change doesn't linger.
 
-import api from '../services/api';
 import { getEmoji } from './helpers';
 
 export interface OrderItem {

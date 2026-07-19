@@ -26,8 +26,8 @@ export default function Navbar({ variant, userName, callCount = 0 }: NavbarProps
   const { t } = useLang();
   const navigate = useNavigate();
 
-  function logout() {
-    clearSession();
+  async function logout() {
+    await clearSession();
     navigate('/');
   }
 

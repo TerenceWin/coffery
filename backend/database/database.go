@@ -6,6 +6,7 @@ import (
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver
+	"golang.org/x/crypto/bcrypt"
 )
 
 func InitializeDB() *sql.DB {
@@ -75,5 +76,63 @@ func InitializeDB() *sql.DB {
 		panic(err)
 	}
 
+	// Creating the table for login accounts
+	usersQuery := `
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL,
+        name TEXT NOT NULL
+    )`
+
+	_, err = database.Exec(usersQuery)
+	if err != nil {
+		panic(err)
+	}
+
+	seedDefaultUsers(database)
+
 	return database
+}
+
+// seedDefaultUsers creates the demo boss/staff accounts the first time the
+// app runs against a fresh database, so the login screen's hinted demo
+// credentials keep working. It's a no-op if accounts already exist.
+func seedDefaultUsers(database *sql.DB) {
+	defaults := []struct {
+		username string
+		password string
+		role     string
+		name     string
+	}{
+		{"boss", "boss123", "boss", "Admin Boss"},
+		{"staff001", "staff123", "staff", "Staff 1"},
+	}
+
+	for _, u := range defaults {
+		var exists int
+		err := database.QueryRow("SELECT COUNT(*) FROM users WHERE username = $1", u.username).Scan(&exists)
+		if err != nil {
+			fmt.Println("Error checking for existing user:", err)
+			continue
+		}
+		if exists > 0 {
+			continue
+		}
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(u.password), bcrypt.DefaultCost)
+		if err != nil {
+			fmt.Println("Error hashing default password:", err)
+			continue
+		}
+
+		_, err = database.Exec(
+			"INSERT INTO users (username, password_hash, role, name) VALUES ($1, $2, $3, $4)",
+			u.username, string(hash), u.role, u.name,
+		)
+		if err != nil {
+			fmt.Println("Error seeding default user:", err)
+		}
+	}
 }

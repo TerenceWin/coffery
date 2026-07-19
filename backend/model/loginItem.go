@@ -1,6 +1,6 @@
 package model
 
-type loginItem struct {
+type LoginItem struct {
 	ID           int    `json:"id"`
 	Username     string `json:"username"`
 	PasswordHash string `json:"-"` // dash to signal to not include with the json

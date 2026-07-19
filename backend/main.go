@@ -2,6 +2,7 @@ package main
 
 import (
 	"cafe-app-backend/controller"
+	"cafe-app-backend/controller/authenticationController"
 	"cafe-app-backend/controller/menuController"
 	"cafe-app-backend/controller/transactionController"
 	"cafe-app-backend/database"
@@ -34,6 +35,9 @@ func main() {
 
 	// Register order/transaction handlers
 	transactionController.RegisterTransactionRoutes(router, db, myHub)
+
+	// Register login/logout handlers
+	authenticationController.RegisterAuthRoutes(router, db)
 
 	// Exposes the websocket so can update when changed
 	router.GET("/ws", func(c *gin.Context) {
