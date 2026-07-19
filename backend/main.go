@@ -27,8 +27,17 @@ func main() {
 	// Initialize the Gin
 	router := gin.Default()
 
-	// Allow the frontend to talk to this backend
-	router.Use(cors.Default())
+	// Allow the frontend to talk to this backend.
+	// cors.Default() only allows Origin/Content-Length/Content-Type headers -
+	// it does NOT allow "Authorization", which the frontend now sends on
+	// every request once logged in. Without this, the browser blocks the
+	// actual request after a successful-looking preflight.
+	router.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		ExposeHeaders:   []string{"Content-Length"},
+	}))
 
 	// Register all owner-related handlers from the controller package
 	menuController.RegisterMenuRoutes(router, db, myHub)
