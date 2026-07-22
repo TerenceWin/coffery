@@ -60,7 +60,7 @@ export default function MenuTab({ toast }: Props) {
         headers: { 'Content-Type': undefined as unknown as string },
       });
 
-      await api.post('/add-item', { item: name, code, cost: price, imagePath: uploadRes.data.url });
+      await api.post('/menu-items', { item: name, code, cost: price, imagePath: uploadRes.data.url });
 
       setNewName('');
       setNewCode('');

@@ -9,16 +9,16 @@ import (
 )
 
 type MenuController struct {
-	store *crudMenu.Store
-	hub   *hub.Hub
-	// imagesDir string // ── image upload: path to Render disk folder (disabled for study)
+	store     *crudMenu.Store
+	hub       *hub.Hub
+	imagesDir string // path to the images folder (local /tmp dir or Render disk mount)
 }
 
-func RegisterMenuRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
+func RegisterMenuRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub, imagesDir string) {
 	ctrl := &MenuController{
-		store: crudMenu.NewStore(db),
-		hub:   h,
-		// imagesDir: imagesDir, // ── image upload: stored on the struct so UploadImage can use it
+		store:     crudMenu.NewStore(db),
+		hub:       h,
+		imagesDir: imagesDir, // stored on the struct so UploadImage can use it
 	}
 
 	menu := router.Group("/menu-items")
@@ -31,8 +31,6 @@ func RegisterMenuRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
 		menu.DELETE("/:code", ctrl.Delete)
 	}
 
-	// ── image upload route (disabled for study) ───────────────────────────────
 	// Receives the image file from the frontend and calls UploadImage in uploadRouter.go
-	// router.POST("/upload-image", ctrl.UploadImage)
-	// ─────────────────────────────────────────────────────────────────────────
+	router.POST("/upload-image", ctrl.UploadImage)
 }

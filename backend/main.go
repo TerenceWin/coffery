@@ -21,21 +21,16 @@ func main() {
 	db := database.InitializeDB()
 	defer db.Close()
 
-	// Initialize the hub
 	myHub := hub.NewHub()
 
-	// ── IMAGE STORAGE SETUP (disabled for study) ─────────────────────────────
-	// Reads IMAGES_DIR env var, creates the folder, and wires up the static route
-	// so uploaded images are publicly accessible at /images/<filename>
-	//
-	// imagesDir := os.Getenv("IMAGES_DIR")
-	// if imagesDir == "" {
-	// 	imagesDir = "/var/data/images"   // Render disk mount path
-	// }
-	// if err := os.MkdirAll(imagesDir, 0755); err != nil {
-	// 	panic("cannot create images dir: " + err.Error())
-	// }
-	// ─────────────────────────────────────────────────────────────────────────
+	// Resolve the images directory (Render disk mounts at /var/data)
+	imagesDir := os.Getenv("IMAGES_DIR")
+	if imagesDir == "" {
+		imagesDir = "/var/data/images"
+	}
+	if err := os.MkdirAll(imagesDir, 0755); err != nil {
+		panic("cannot create images dir: " + err.Error())
+	}
 
 	// Initialize the Gin
 	router := gin.Default()
@@ -46,17 +41,17 @@ func main() {
 	// every request once logged in. Without this, the browser blocks the
 	// actual request after a successful-looking preflight.
 	router.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
+		AllowOrigins:  []string{"https://hanacoffee.onrender.com/", "http://localhost:3000", "https://coffery.onrender.com"},
 		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		ExposeHeaders:   []string{"Content-Length"},
 	}))
 
-	// Serves files from the Render disk as a public URL (disabled for study)
-	// router.Static("/images", imagesDir)
+	// Serves uploaded images as static files at /images/*
+	router.Static("/images", imagesDir)
 
 	// Register all owner-related handlers from the controller package
-	menuController.RegisterMenuRoutes(router, db, myHub)
+	menuController.RegisterMenuRoutes(router, db, myHub, imagesDir)
 
 	// Register order/transaction handlers
 	transactionController.RegisterTransactionRoutes(router, db, myHub)
