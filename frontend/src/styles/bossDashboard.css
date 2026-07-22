@@ -97,7 +97,13 @@
 /* .item-card.unavail { opacity:.55; } */
 .item-emoji-sm { font-size:28px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:var(--latte); border-radius:var(--r-md); flex-shrink:0; }
 .item-meta { flex:1; min-width:0; }
-.item-meta-name { font-size:14px; font-weight:700; color:var(--espresso); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.item-meta-name { font-size:14px; font-weight:700; color:var(--espresso); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+.item-meta-name:hover { text-decoration:underline dotted; }
+.item-meta-name-input {
+  width:100%; border:none; border-bottom:1px solid var(--coffee); background:transparent;
+  font-size:14px; font-weight:700; color:var(--espresso); font-family:inherit; padding:0;
+}
+.item-meta-name-input:focus { outline:none; }
 .item-meta-code { font-size:11px; color:var(--text-muted); margin-top:1px; }
 .item-controls { display:flex; align-items:center; gap:8px; flex-shrink:0; }
 

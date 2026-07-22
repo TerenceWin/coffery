@@ -1,23 +1,56 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getEmoji } from '../../utils/helpers';
 import { MenuItem } from '../../models/MenuItem'
 
 
-function ItemCard({ item, onSavePrice, onToggle, onDelete }: {
+function ItemCard({ item, onSavePrice, onToggle, onDelete, onSaveName }: {
   item: MenuItem;
   onSavePrice: (v: string) => void;
   onToggle: (v: boolean) => void;
   onDelete: () => void;
+  onSaveName: (v: string) => void;
 }) {
   const [price, setPrice] = useState(String(item.cost));
+  const [editingName, setEditingName] = useState(false);
+  const [name, setName] = useState(item.item);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setPrice(String(item.cost)), [item.cost]);
+  useEffect(() => setName(item.item), [item.item]);
+
+  useEffect(() => {
+    if (editingName) {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }
+  }, [editingName]);
+
+  function saveName() {
+    setEditingName(false);
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === item.item) {
+      setName(item.item);
+      return;
+    }
+    onSaveName(trimmed);
+  }
 
   return (
     <div className={`item-card${!item.available ? ' unavail' : ''}`} id={`card-${item.code}`}>
       <div className="item-emoji-sm">{getEmoji(item.item)}</div>
       <div className="item-meta">
-        <div className="item-meta-name">{item.item}</div>
+        {editingName ? (
+          <input
+            ref={nameInputRef}
+            className="item-meta-name-input"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onBlur={saveName}
+            onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          />
+        ) : (
+          <div className="item-meta-name" onClick={() => setEditingName(true)}>{item.item}</div>
+        )}
         <div className="item-meta-code">{item.code}</div>
       </div>
       <div className="item-controls">
@@ -43,4 +76,4 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete }: {
   );
 }
 
-export default ItemCard; 
+export default ItemCard;

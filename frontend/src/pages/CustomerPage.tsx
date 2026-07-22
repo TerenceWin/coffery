@@ -65,10 +65,10 @@ function connectWS() {
         try {
             const msg = JSON.parse(data);
             if (msg.type === 'availability_update') {
-                setMenuItems(prev => prev.map(i => 
+                setMenuItems(prev => prev.map(i =>
                     i.code === msg.code ? { ...i, available: msg.available } : i
                 ));
-                
+
                 if (!msg.available) {
                     setCart(prev => {
                         if (!prev[msg.code]) return prev;
@@ -78,6 +78,18 @@ function connectWS() {
                         return next;
                     });
                 }
+            }
+
+            if (msg.type === 'name_update') {
+                setMenuItems(prev => prev.map(i =>
+                    i.code === msg.code ? { ...i, item: msg.name } : i
+                ));
+
+                // Keep an already-added cart entry's name in sync too
+                setCart(prev => {
+                    if (!prev[msg.code]) return prev;
+                    return { ...prev, [msg.code]: { ...prev[msg.code], name: msg.name } };
+                });
             }
         } catch (e) {
             console.error("Failed to parse WS message:", e);

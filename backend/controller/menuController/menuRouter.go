@@ -27,6 +27,7 @@ func RegisterMenuRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
 		menu.POST("", ctrl.Create)
 		menu.POST("/:code/availability", ctrl.UpdateAvailability)
 		menu.PATCH("/:code/cost", ctrl.UpdateCost)
+		menu.PATCH("/:code/name", ctrl.UpdateName)
 		menu.DELETE("/:code", ctrl.Delete)
 	}
 

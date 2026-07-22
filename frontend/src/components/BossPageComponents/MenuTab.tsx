@@ -89,6 +89,16 @@ export default function MenuTab({ toast }: Props) {
     }
   }
 
+  async function saveName(code: string, newName: string) {
+    try {
+      await api.patch(`/menu-items/${code}/name`, { name: newName });
+      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, item: newName } : i));
+      toast(t('toastNameOK'), 'ok');
+    } catch {
+      toast(t('toastErrName'), 'err');
+    }
+  }
+
   async function toggleAvail(code: string, avail: boolean) {
     try {
       await api.patch(`/menu-items/${code}/availability`, { avail });
@@ -192,6 +202,7 @@ export default function MenuTab({ toast }: Props) {
           onSavePrice={(v) => savePrice(item.code, v, item.cost)}
           onToggle={(v) => toggleAvail(item.code, v)}
           onDelete={() => setConfirmItem({ code: item.code, name: item.item })}
+          onSaveName={(v) => saveName(item.code, v)}
         />
       ))}
 
