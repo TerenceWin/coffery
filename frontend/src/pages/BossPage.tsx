@@ -174,25 +174,31 @@ async function addItem() {
   const name = newName.trim();
   const code = newCode.trim().toUpperCase();
   const price = parseInt(newPrice);
-  
-  // Ensure all required fields including the file are provided
+
   if (!name || !code || !price || !file) {
-    toast(t('fillAllFields'), 'err'); 
+    toast(t('fillAllFields'), 'err');
     return;
   }
 
   setAdding(true);
 
   try {
-    await api.post('/menu-items', { item: name, code, cost: price, imagePath: newImageName } );
-    
-    // Reset all form fields
+    // Upload image to disk first, then add the menu item with the returned URL
+    const formData = new FormData();
+    formData.append('image', file);
+    const uploadRes = await api.post<{ url: string }>('/upload-image', formData, {
+      headers: { 'Content-Type': undefined as unknown as string },
+    });
+
+    await api.post('/add-item', { item: name, code, cost: price, imagePath: uploadRes.data.url });
+
     setNewName('');
     setNewCode('');
     setNewPrice('');
     setNewImageName('');
+    setNewImage('');
     setFile(null);
-    
+
     setAddOpen(false);
     toast(t('toastAdded'), 'ok');
     await loadMenu();
@@ -353,15 +359,7 @@ async function addItem() {
                     </div>
                   </div>
 
-                  <div className="add-field">
-                    <label>Save as Name:</label>
-                    <input 
-                      type="text" 
-                      value={newImageName} 
-                      onChange={(e) => setNewImageName(e.target.value)} 
-                      placeholder="e.g. coffee.jpg"
-                    />
-                  </div>
+
                 </div>
                 <button className="btn-add" onClick={addItem} disabled={adding}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

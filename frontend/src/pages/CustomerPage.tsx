@@ -57,8 +57,8 @@ export default function CustomerPage() {
 function connectWS() {
     if (wsRetry.current) clearTimeout(wsRetry.current);
     
-    // Use wss:// for secure connections on Render
-    const wsUrl = 'wss://hanacoffee.onrender.com';
+    const wsBase = import.meta.env.VITE_SOCKET_URL || 'wss://coffery.onrender.com';
+    const wsUrl = wsBase.replace(/^http/, 'ws');
     const ws = new WebSocket(`${wsUrl}/ws`);
 
     ws.onmessage = ({ data }) => {

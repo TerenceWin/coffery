@@ -12,7 +12,7 @@ dev-fe:
 	@cd frontend && npm run dev
 
 dev-be:
-	@cd backend && go run ./cmd/server
+	@cd backend && set -a && . ./.env && set +a && go run .
 
 # ── Database ─────────────────────────────────────────────────────────────────
 

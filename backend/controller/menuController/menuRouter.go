@@ -11,22 +11,27 @@ import (
 type MenuController struct {
 	store *crudMenu.Store
 	hub   *hub.Hub
+	// imagesDir string // ── image upload: path to Render disk folder (disabled for study)
 }
 
-// RegisterOwnerRoutes maps out clear RESTful endpoints bound to resource methods
 func RegisterMenuRoutes(router *gin.Engine, db *sql.DB, h *hub.Hub) {
 	ctrl := &MenuController{
 		store: crudMenu.NewStore(db),
 		hub:   h,
+		// imagesDir: imagesDir, // ── image upload: stored on the struct so UploadImage can use it
 	}
 
-	// Standardized resource-based API paths
 	menu := router.Group("/menu-items")
 	{
 		menu.GET("", ctrl.GetAll)
 		menu.POST("", ctrl.Create)
-		menu.PATCH("/:code/availability", ctrl.UpdateAvailability)
+		menu.POST("/:code/availability", ctrl.UpdateAvailability)
 		menu.PATCH("/:code/cost", ctrl.UpdateCost)
 		menu.DELETE("/:code", ctrl.Delete)
 	}
+
+	// ── image upload route (disabled for study) ───────────────────────────────
+	// Receives the image file from the frontend and calls UploadImage in uploadRouter.go
+	// router.POST("/upload-image", ctrl.UploadImage)
+	// ─────────────────────────────────────────────────────────────────────────
 }

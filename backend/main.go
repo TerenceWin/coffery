@@ -24,6 +24,19 @@ func main() {
 	// Initialize the hub
 	myHub := hub.NewHub()
 
+	// ── IMAGE STORAGE SETUP (disabled for study) ─────────────────────────────
+	// Reads IMAGES_DIR env var, creates the folder, and wires up the static route
+	// so uploaded images are publicly accessible at /images/<filename>
+	//
+	// imagesDir := os.Getenv("IMAGES_DIR")
+	// if imagesDir == "" {
+	// 	imagesDir = "/var/data/images"   // Render disk mount path
+	// }
+	// if err := os.MkdirAll(imagesDir, 0755); err != nil {
+	// 	panic("cannot create images dir: " + err.Error())
+	// }
+	// ─────────────────────────────────────────────────────────────────────────
+
 	// Initialize the Gin
 	router := gin.Default()
 
@@ -38,6 +51,9 @@ func main() {
 		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		ExposeHeaders:   []string{"Content-Length"},
 	}))
+
+	// Serves files from the Render disk as a public URL (disabled for study)
+	// router.Static("/images", imagesDir)
 
 	// Register all owner-related handlers from the controller package
 	menuController.RegisterMenuRoutes(router, db, myHub)
