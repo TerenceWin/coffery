@@ -14,6 +14,14 @@ interface CartEntry extends OrderItem {
   emoji: string;
 }
 
+function ItemImage({ src, emoji, alt }: { src?: string; emoji: string; alt: string }) {
+  const [errored, setErrored] = useState(false);
+  if (!src || errored) {
+    return <div className="item-emoji">{emoji}</div>;
+  }
+  return <img className="item-image" src={src} alt={alt} onError={() => setErrored(true)} />;
+}
+
 export default function CustomerPage() {
   const { t } = useLang();
   const [searchParams] = useSearchParams();
@@ -211,7 +219,7 @@ function connectWS() {
             const emoji = getEmoji(item.item);
             return (
               <div key={item.code} className={`menu-item${!item.available ? ' unavailable' : ''}`} data-code={item.code}>
-                <div className="item-emoji">{emoji}</div>
+                <ItemImage src={item.imagePath} emoji={emoji} alt={item.item} />
                 <div className="item-info">
                   <div className="item-name">{item.item}</div>
                   <div className="item-code">{item.code}</div>

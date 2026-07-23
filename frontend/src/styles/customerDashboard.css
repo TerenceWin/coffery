@@ -123,7 +123,8 @@
   transition: var(--ease);
 }
 .menu-item.unavailable { opacity: .5; }
-.item-emoji { font-size: 32px; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--latte); border-radius: var(--r-md); flex-shrink: 0; }
+.item-emoji { font-size: 32px; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: var(--latte); border-radius: var(--r-md); flex-shrink: 0; }
+.item-image { width: 80px; height: 80px; object-fit: cover; border-radius: var(--r-md); flex-shrink: 0; }
 .item-info { flex: 1; min-width: 0; }
 .item-name { font-size: 14px; font-weight: 700; color: var(--espresso); }
 .item-code { font-size: 11px; color: var(--text-muted); margin-top: 2px; }

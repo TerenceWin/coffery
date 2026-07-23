@@ -95,8 +95,8 @@
   transition:var(--ease);
 }
 /* .item-card.unavail { opacity:.55; } */
-.item-emoji-sm { font-size:28px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:var(--latte); border-radius:var(--r-md); flex-shrink:0; }
-.item-image-sm { width:44px; height:44px; object-fit:cover; background:var(--latte); border-radius:var(--r-md); flex-shrink:0; }
+.item-emoji-sm { font-size:28px; width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:var(--latte); border-radius:var(--r-md); flex-shrink:0; }
+.item-image-sm { width: 80px; height: 80px; object-fit:cover; background:var(--latte); border-radius:var(--r-md); flex-shrink:0; }
 .item-card.unavail .item-image-sm { opacity:.5; }
 .item-meta { flex:1; min-width:0; }
 .item-meta-name { font-size:14px; font-weight:700; color:var(--espresso); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
