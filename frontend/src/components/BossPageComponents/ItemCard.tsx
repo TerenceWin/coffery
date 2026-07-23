@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { getEmoji } from '../../utils/helpers';
 import { MenuItem } from '../../models/MenuItem'
 
 
@@ -37,7 +36,11 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete, onSaveName }: {
 
   return (
     <div className={`item-card${!item.available ? ' unavail' : ''}`} id={`card-${item.code}`}>
-      <div className="item-emoji-sm">{getEmoji(item.item)}</div>
+      {item.imagePath ? (
+        <img className="item-image-sm" src={item.imagePath} alt={item.item} />
+      ) : (
+        <div className="item-emoji-sm">☕</div>
+      )}
       <div className="item-meta">
         {editingName ? (
           <input
