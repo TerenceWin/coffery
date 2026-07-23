@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -48,7 +47,7 @@ func (ctrl *MenuController) UploadImage(c *gin.Context) {
 	// Build and return the public URL the frontend will store in the database
 	baseURL := os.Getenv("BASE_URL")
 	if baseURL == "" {
-		baseURL = "https://hanacoffee.onrender.com"
+		baseURL = "https://coffery.onrender.com"
 	}
 	c.JSON(http.StatusOK, gin.H{"url": baseURL + "/images/" + uniqueName})
 }
