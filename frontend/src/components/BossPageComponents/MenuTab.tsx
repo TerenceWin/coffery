@@ -8,6 +8,18 @@ interface Props {
   toast: (msg: string, type?: 'ok' | 'err') => void;
 }
 
+// Category values sent to the backend, which maps each one to a code prefix
+// (e.g. Coffee -> C001, C002, ...) and generates the item's code.
+const CATEGORIES: { value: string; labelKey: string }[] = [
+  { value: 'Coffee', labelKey: 'catCoffee' },
+  { value: 'Special Coffee', labelKey: 'catSpecialCoffee' },
+  { value: 'Drinks', labelKey: 'catDrinks' },
+  { value: 'Bread', labelKey: 'catBread' },
+  { value: 'Fried Food', labelKey: 'catFriedFood' },
+  { value: 'Dessert', labelKey: 'catDessert' },
+  { value: 'Others', labelKey: 'catOthers' },
+];
+
 export default function MenuTab({ toast }: Props) {
   const { t } = useLang();
 
@@ -16,7 +28,7 @@ export default function MenuTab({ toast }: Props) {
   const [addOpen, setAddOpen] = useState(false);
 
   const [newName, setNewName] = useState('');
-  const [newCode, setNewCode] = useState('');
+  const [newCategory, setNewCategory] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,10 +54,10 @@ export default function MenuTab({ toast }: Props) {
 
   async function addItem() {
     const name = newName.trim();
-    const code = newCode.trim().toUpperCase();
+    const category = newCategory;
     const price = parseInt(newPrice);
 
-    if (!name || !code || !price || !file) {
+    if (!name || !category || !price || !file) {
       toast(t('fillAllFields'), 'err');
       return;
     }
@@ -60,10 +72,10 @@ export default function MenuTab({ toast }: Props) {
         headers: { 'Content-Type': undefined as unknown as string },
       });
 
-      await api.post('/menu-items', { item: name, code, cost: price, imagePath: uploadRes.data.url });
+      await api.post('/menu-items', { item: name, category, cost: price, imagePath: uploadRes.data.url });
 
       setNewName('');
-      setNewCode('');
+      setNewCategory('');
       setNewPrice('');
       setFile(null);
 
@@ -146,10 +158,14 @@ export default function MenuTab({ toast }: Props) {
                 <input type="text" placeholder={t('phItemName')} value={newName}
                   onChange={e => setNewName(e.target.value)} autoComplete="off" />
               </div>
-              <div className="add-field" style={{ maxWidth: 100 }}>
-                <label>{t('itemCode')}</label>
-                <input type="text" placeholder={t('phItemCode')} value={newCode}
-                  onChange={e => setNewCode(e.target.value.toUpperCase())} autoComplete="off" style={{ textTransform: 'uppercase' }} />
+              <div className="add-field" style={{ maxWidth: 160 }}>
+                <label>{t('itemCategory')}</label>
+                <select value={newCategory} onChange={e => setNewCategory(e.target.value)}>
+                  <option value="">{t('phItemCategory')}</option>
+                  {CATEGORIES.map(cat => (
+                    <option key={cat.value} value={cat.value}>{t(cat.labelKey)}</option>
+                  ))}
+                </select>
               </div>
               <div className="add-field" style={{ maxWidth: 100 }}>
                 <label>{t('itemPrice')}</label>
