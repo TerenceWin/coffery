@@ -14,6 +14,20 @@ interface CartEntry extends OrderItem {
   emoji: string;
 }
 
+function cartStorageKey(tableNum: string): string {
+  return `cart_table_${tableNum}`;
+}
+
+function loadCachedCart(tableNum: string | null): Record<string, CartEntry> {
+  if (!tableNum) return {};
+  try {
+    const raw = sessionStorage.getItem(cartStorageKey(tableNum));
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 function ItemImage({ src, emoji, alt, imgClassName = 'item-image', emojiClassName = 'item-emoji' }: {
   src?: string; emoji: string; alt: string; imgClassName?: string; emojiClassName?: string;
 }) {
@@ -33,7 +47,7 @@ export default function CustomerPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading]     = useState(false);
   const [loadErr, setLoadErr]     = useState('');
-  const [cart, setCart]           = useState<Record<string, CartEntry>>({});
+  const [cart, setCart]           = useState<Record<string, CartEntry>>(() => loadCachedCart(tableNum));
   const [cartOpen, setCartOpen]   = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -50,6 +64,11 @@ export default function CustomerPage() {
       if (wsRef.current) wsRef.current.close();
     };
   }, [tableNum]);
+
+  useEffect(() => {
+    if (!tableNum) return;
+    sessionStorage.setItem(cartStorageKey(tableNum), JSON.stringify(cart));
+  }, [cart, tableNum]);
 
   async function loadMenu() {
     setLoading(true); setLoadErr('');
