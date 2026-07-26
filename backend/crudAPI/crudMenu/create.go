@@ -18,10 +18,10 @@ type localMenuItem model.MenuItem
 var categoryPrefixes = map[string]string{
 	"Coffee":         "C",
 	"Special Coffee": "SC",
-	"Drinks":         "D",
+	"Drinks":         "DR",
 	"Bread":          "B",
-	"Fried Food":     "FF",
-	"Dessert":        "DS",
+	"Fries":          "F",
+	"Dessert":        "DE",
 	"Others":         "O",
 }
 
@@ -80,6 +80,43 @@ func (s *Store) InsertEntry(item string, category string, cost int, imagePath st
 				continue // code collision, try again with a fresh number
 			}
 			return "", fmt.Errorf("duplicate! The item '%s' already exists", item)
+		}
+		return "", err
+	}
+
+	return "", fmt.Errorf("failed to generate a unique code, please try again")
+}
+
+// UpdateCategory moves an item to a new category and regenerates its code to
+// match that category's prefix (e.g. Coffee -> Drinks turns C003 into the
+// next DR code), since the code's prefix must always reflect its category.
+func (s *Store) UpdateCategory(code string, newCategory string) (string, error) {
+	prefix, ok := categoryPrefixes[newCategory]
+	if !ok {
+		return "", fmt.Errorf("invalid category: %s", newCategory)
+	}
+
+	for attempt := 0; attempt < 5; attempt++ {
+		newCode, err := s.nextCodeForPrefix(prefix)
+		if err != nil {
+			return "", err
+		}
+
+		result, err := s.db.Exec("UPDATE menu SET code = $1, category = $2 WHERE code = $3", newCode, newCategory, code)
+		if err == nil {
+			affected, err := result.RowsAffected()
+			if err != nil {
+				return "", err
+			}
+			if affected == 0 {
+				return "", fmt.Errorf("action failed: item not found")
+			}
+			return newCode, nil
+		}
+
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "menu_code_key" {
+			continue // code collision, try again with a fresh number
 		}
 		return "", err
 	}

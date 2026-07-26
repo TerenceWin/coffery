@@ -106,7 +106,13 @@
   font-size:14px; font-weight:700; color:var(--espresso); font-family:inherit; padding:0;
 }
 .item-meta-name-input:focus { outline:none; }
-.item-meta-code { font-size:11px; color:var(--text-muted); margin-top:1px; }
+.item-meta-category { font-size:11px; color:var(--text-muted); margin-top:1px; cursor:pointer; }
+.item-meta-category:hover { text-decoration:underline dotted; }
+.item-meta-category-input {
+  font-size:11px; color:var(--text-muted); margin-top:1px;
+  border:none; background:transparent; font-family:inherit; padding:0;
+}
+.item-meta-category-input:focus { outline:none; }
 .item-controls { display:flex; align-items:center; gap:8px; flex-shrink:0; }
 
 /* Price input */

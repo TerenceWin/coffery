@@ -1,18 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { MenuItem } from '../../models/MenuItem'
+import { useLang } from '../../context/LangContext';
+import { CATEGORIES } from '../../constants/categories';
 
 
-function ItemCard({ item, onSavePrice, onToggle, onDelete, onSaveName }: {
+function ItemCard({ item, onSavePrice, onToggle, onDelete, onSaveName, onSaveCategory }: {
   item: MenuItem;
   onSavePrice: (v: string) => void;
   onToggle: (v: boolean) => void;
   onDelete: () => void;
   onSaveName: (v: string) => void;
+  onSaveCategory: (v: string) => void;
 }) {
+  const { t } = useLang();
   const [price, setPrice] = useState(String(item.cost));
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(item.item);
+  const [editingCategory, setEditingCategory] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const categorySelectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => setPrice(String(item.cost)), [item.cost]);
   useEffect(() => setName(item.item), [item.item]);
@@ -24,6 +30,12 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete, onSaveName }: {
     }
   }, [editingName]);
 
+  useEffect(() => {
+    if (editingCategory) {
+      categorySelectRef.current?.focus();
+    }
+  }, [editingCategory]);
+
   function saveName() {
     setEditingName(false);
     const trimmed = name.trim();
@@ -33,6 +45,14 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete, onSaveName }: {
     }
     onSaveName(trimmed);
   }
+
+  function saveCategory(value: string) {
+    setEditingCategory(false);
+    if (!value || value === item.category) return;
+    onSaveCategory(value);
+  }
+
+  const categoryLabel = CATEGORIES.find(c => c.value === item.category);
 
   return (
     <div className={`item-card${!item.available ? ' unavail' : ''}`} id={`card-${item.code}`}>
@@ -54,7 +74,23 @@ function ItemCard({ item, onSavePrice, onToggle, onDelete, onSaveName }: {
         ) : (
           <div className="item-meta-name" onClick={() => setEditingName(true)}>{item.item}</div>
         )}
-        <div className="item-meta-code">{item.code}</div>
+        {editingCategory ? (
+          <select
+            ref={categorySelectRef}
+            className="item-meta-category-input"
+            defaultValue={item.category}
+            onChange={e => saveCategory(e.target.value)}
+            onBlur={() => setEditingCategory(false)}
+          >
+            {CATEGORIES.map(cat => (
+              <option key={cat.value} value={cat.value}>{t(cat.labelKey)}</option>
+            ))}
+          </select>
+        ) : (
+          <div className="item-meta-category" onClick={() => setEditingCategory(true)}>
+            {categoryLabel ? t(categoryLabel.labelKey) : (item.category || item.code)}
+          </div>
+        )}
       </div>
       <div className="item-controls">
         <div className="price-wrap">

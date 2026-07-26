@@ -2,23 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useLang } from '../../context/LangContext';
 import api from '../../services/api';
 import { MenuItem } from '../../models/MenuItem';
+import { CATEGORIES } from '../../constants/categories';
 import ItemCard from './ItemCard';
 
 interface Props {
   toast: (msg: string, type?: 'ok' | 'err') => void;
 }
-
-// Category values sent to the backend, which maps each one to a code prefix
-// (e.g. Coffee -> C001, C002, ...) and generates the item's code.
-const CATEGORIES: { value: string; labelKey: string }[] = [
-  { value: 'Coffee', labelKey: 'catCoffee' },
-  { value: 'Special Coffee', labelKey: 'catSpecialCoffee' },
-  { value: 'Drinks', labelKey: 'catDrinks' },
-  { value: 'Bread', labelKey: 'catBread' },
-  { value: 'Fried Food', labelKey: 'catFriedFood' },
-  { value: 'Dessert', labelKey: 'catDessert' },
-  { value: 'Others', labelKey: 'catOthers' },
-];
 
 export default function MenuTab({ toast }: Props) {
   const { t } = useLang();
@@ -108,6 +97,17 @@ export default function MenuTab({ toast }: Props) {
       toast(t('toastNameOK'), 'ok');
     } catch {
       toast(t('toastErrName'), 'err');
+    }
+  }
+
+  async function saveCategory(code: string, newCategory: string) {
+    try {
+      const res = await api.patch<{ code: string }>(`/menu-items/${code}/category`, { category: newCategory });
+      const newCode = res.data.code;
+      setMenuItems(prev => prev.map(i => i.code === code ? { ...i, code: newCode, category: newCategory } : i));
+      toast(t('toastCategoryOK'), 'ok');
+    } catch {
+      toast(t('toastErrCategory'), 'err');
     }
   }
 
@@ -219,6 +219,7 @@ export default function MenuTab({ toast }: Props) {
           onToggle={(v) => toggleAvail(item.code, v)}
           onDelete={() => setConfirmItem({ code: item.code, name: item.item })}
           onSaveName={(v) => saveName(item.code, v)}
+          onSaveCategory={(v) => saveCategory(item.code, v)}
         />
       ))}
 
