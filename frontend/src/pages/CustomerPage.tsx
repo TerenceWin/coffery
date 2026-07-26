@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import LangSwitcher from '../components/LangSwitcher';
+import ConnectionBadge from '../components/ConnectionBadge';
 import { useToast, ToastContainer } from '../components/Toast';
 import { placeOrder, callStaff } from '../utils/storage';
 import type { OrderItem } from '../utils/storage';
@@ -50,6 +51,7 @@ export default function CustomerPage() {
   const [cart, setCart]           = useState<Record<string, CartEntry>>(() => loadCachedCart(tableNum));
   const [cartOpen, setCartOpen]   = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [wsConnected, setWsConnected] = useState(true);
   const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wsRef   = useRef<WebSocket | null>(null);
   const wsDead  = useRef(false);
@@ -89,7 +91,9 @@ function connectWS() {
     const wsBase = import.meta.env.VITE_SOCKET_URL || 'wss://coffery.onrender.com';
     const wsUrl = wsBase.replace(/^http/, 'ws');
     const ws = new WebSocket(`${wsUrl}/ws`);
+    wsRef.current = ws;
 
+    ws.onopen = () => setWsConnected(true);
     ws.onmessage = ({ data }) => {
         try {
             const msg = JSON.parse(data);
@@ -124,7 +128,10 @@ function connectWS() {
             console.error("Failed to parse WS message:", e);
         }
     };
-    ws.onclose = () => { wsRetry.current = setTimeout(connectWS, 4000); };
+    ws.onclose = () => {
+      setWsConnected(false);
+      if (!wsDead.current) wsRetry.current = setTimeout(connectWS, 4000);
+    };
     ws.onerror = () => ws.close();
   }
 
@@ -189,6 +196,7 @@ function connectWS() {
             <span>Hana Coffee</span>
           </div>
           <div className="header-actions">
+            <ConnectionBadge connected={wsConnected} />
             <LangSwitcher variant="light" />
             {tableNum && (
               <button className="btn-call" onClick={handleCallStaff}>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import LangSwitcher from './LangSwitcher';
+import ConnectionBadge from './ConnectionBadge';
 import { clearSession, changePassword } from '../utils/storage';
 
 const CoffeeIcon = () => (
@@ -27,9 +28,10 @@ interface NavbarProps {
   variant: 'boss' | 'staff';
   userName?: string;
   callCount?: number;
+  connected?: boolean;
 }
 
-export default function Navbar({ variant, userName, callCount = 0 }: NavbarProps) {
+export default function Navbar({ variant, userName, callCount = 0, connected = true }: NavbarProps) {
   const { t } = useLang();
   const navigate = useNavigate();
   const [pwOpen, setPwOpen] = useState(false);
@@ -48,6 +50,7 @@ export default function Navbar({ variant, userName, callCount = 0 }: NavbarProps
             <span>Hana Coffee</span>
           </div>
           <div className="nav-right">
+            <ConnectionBadge connected={connected} />
             <span className="nav-user">{userName}</span>
             <LangSwitcher variant="light" />
             <button className="btn-logout" onClick={() => setPwOpen(true)} title={t('changePassword')}>
@@ -80,6 +83,7 @@ export default function Navbar({ variant, userName, callCount = 0 }: NavbarProps
             {callCount}&nbsp;{t('tablesCalling')}
           </div>
         )}
+        <ConnectionBadge connected={connected} />
         <LangSwitcher variant="dark" />
         <div className="navbar-user">
           <div className="navbar-avatar">{userName?.charAt(0).toUpperCase()}</div>

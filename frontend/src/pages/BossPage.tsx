@@ -25,6 +25,7 @@ export default function BossPage() {
   // must keep it fresh in the background even while the Reports tab isn't mounted.
   const [transactions, setTransactions] = useState<Order[]>([]);
   const [reportLoading, setReportLoading] = useState(false);
+  const [wsConnected, setWsConnected] = useState(true);
 
   const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wsRef   = useRef<WebSocket | null>(null);
@@ -33,9 +34,12 @@ export default function BossPage() {
   useEffect(() => {
     if (!session || session.role !== 'boss') { navigate('/'); return; }
     wsDead.current = false;
+    loadReports();
     connectWS();
+    const id = setInterval(() => loadReports(), 20000); //Dumb safety net, in case WS drop
     return () => {
       wsDead.current = true;
+      clearInterval(id);
       if (wsRetry.current) clearTimeout(wsRetry.current);
       if (wsRef.current) wsRef.current.close();
     };
@@ -45,10 +49,12 @@ export default function BossPage() {
     if (wsDead.current) return;
     if (wsRetry.current) clearTimeout(wsRetry.current);
 
-    const wsUrl = 'wss://coffery.onrender.com';
+    const wsBase = import.meta.env.VITE_SOCKET_URL || 'wss://coffery.onrender.com';
+    const wsUrl = wsBase.replace(/^http/, 'ws');
     const ws = new WebSocket(`${wsUrl}/ws`);
     wsRef.current = ws;
 
+    ws.onopen = () => setWsConnected(true);
     ws.onmessage = ({ data }) => {
       try {
         const msg = JSON.parse(data);
@@ -61,7 +67,10 @@ export default function BossPage() {
         console.error('Failed to parse WS message:', e);
       }
     };
-    ws.onclose = () => { if (!wsDead.current) wsRetry.current = setTimeout(connectWS, 4000); };
+    ws.onclose = () => {
+      setWsConnected(false);
+      if (!wsDead.current) wsRetry.current = setTimeout(connectWS, 4000);
+    };
     ws.onerror = () => ws.close();
   }
 
@@ -84,7 +93,7 @@ export default function BossPage() {
   return (
     <div style={{ background: '#F5F1EC', minHeight: '100vh', fontFamily: "'Inter','Noto Sans Myanmar',sans-serif" }}>
       
-      <Navbar variant="boss" userName={session?.name || session?.username} />
+      <Navbar variant="boss" userName={session?.name || session?.username} connected={wsConnected} />
 
       <div className="dash-tabs">
         <button className={`dash-tab${tab === 'menu' ? ' active' : ''}`} onClick={() => setTab('menu')}>

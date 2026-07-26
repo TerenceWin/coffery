@@ -20,8 +20,8 @@ export interface Session {
 export async function login(role: string, username: string, password: string): Promise<Session | null> {
   try {
     const res = await api.post<{ token: string; user: Session }>('/auth/login', { role, username, password });
-    localStorage.setItem(TOKEN_KEY, res.data.token);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(res.data.user));
+    sessionStorage.setItem(TOKEN_KEY, res.data.token);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(res.data.user));
     return res.data.user;
   } catch (err) {
     const status = (err as { response?: { status?: number } }).response?.status;
@@ -31,7 +31,7 @@ export async function login(role: string, username: string, password: string): P
 }
 
 export function getSession(): Session | null {
-  const raw = localStorage.getItem(SESSION_KEY);
+  const raw = sessionStorage.getItem(SESSION_KEY);
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -45,8 +45,8 @@ export async function clearSession(): Promise<void> {
     // Token may already be expired/invalid - that's fine, we're logging
     // out either way. Don't block the user on this.
   } finally {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
   }
 }
 

@@ -20,6 +20,7 @@ export default function StaffPage() {
   const [checkoutOrder, setCheckoutOrder] = useState<Order | null>(null);
   const [cancelOrder, setCancelOrder]     = useState<Order | null>(null);
   const [lastUpdate, setLastUpdate]       = useState('');
+  const [wsConnected, setWsConnected]     = useState(true);
 
   const prevPendingCount = useRef(-1);
   const prevCallCount    = useRef(-1);
@@ -45,10 +46,12 @@ export default function StaffPage() {
     if (wsDead.current) return;
     if (wsRetry.current) clearTimeout(wsRetry.current);
 
-    const wsUrl = 'wss://coffery.onrender.com';
+    const wsBase = import.meta.env.VITE_SOCKET_URL || 'wss://coffery.onrender.com';
+    const wsUrl = wsBase.replace(/^http/, 'ws');
     const ws = new WebSocket(`${wsUrl}/ws`);
     wsRef.current = ws;
 
+    ws.onopen = () => setWsConnected(true);
     ws.onmessage = ({ data }) => {
       try {
         const msg = JSON.parse(data);
@@ -59,7 +62,10 @@ export default function StaffPage() {
         console.error('Failed to parse WS message:', e);
       }
     };
-    ws.onclose = () => { if (!wsDead.current) wsRetry.current = setTimeout(connectWS, 4000); };
+    ws.onclose = () => {
+      setWsConnected(false);
+      if (!wsDead.current) wsRetry.current = setTimeout(connectWS, 4000);
+    };
     ws.onerror = () => ws.close();
   }
 
@@ -134,7 +140,7 @@ export default function StaffPage() {
 
   return (
     <div className="dashboard-page">
-      <Navbar variant="staff" userName={session?.name} callCount={calls.length} />
+      <Navbar variant="staff" userName={session?.name} callCount={calls.length} connected={wsConnected} />
 
       {/* Calls banner */}
       {calls.length > 0 && (
