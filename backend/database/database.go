@@ -24,9 +24,10 @@ func InitializeDB() *sql.DB {
 	// Creating the database table menu
 	query := `
     CREATE TABLE IF NOT EXISTS menu (
-        id SERIAL PRIMARY KEY, 
-        item TEXT UNIQUE, 
-        code TEXT UNIQUE, 
+        id SERIAL PRIMARY KEY,
+        item TEXT UNIQUE,
+        code TEXT UNIQUE,
+        category TEXT DEFAULT '',
         cost INTEGER,
         availability BOOLEAN DEFAULT true,
 		imagePath TEXT
@@ -51,12 +52,21 @@ func InitializeDB() *sql.DB {
 	}
 
 	alterQuery2 := `
-    ALTER TABLE menu 
+    ALTER TABLE menu
     ADD COLUMN IF NOT EXISTS imagePath TEXT DEFAULT true;`
 
 	_, err = database.Exec(alterQuery2)
 	if err != nil {
 		fmt.Println("Error adding imagePath:", err)
+	}
+
+	alterQuery3 := `
+    ALTER TABLE menu
+    ADD COLUMN IF NOT EXISTS category TEXT DEFAULT '';`
+
+	_, err = database.Exec(alterQuery3)
+	if err != nil {
+		fmt.Println("Error adding category:", err)
 	}
 
 	// Creating the table for transactions/orders

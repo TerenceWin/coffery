@@ -64,13 +64,13 @@
 .add-row { display:flex; gap:8px; flex-wrap:wrap; }
 .add-field { flex:1; min-width:120px; }
 .add-field label { display:block; font-size:11.5px; font-weight:600; color:var(--text-muted); margin-bottom:5px; }
-.add-field input {
+.add-field input, .add-field select {
   width:100%; padding:9px 11px;
   border:1.5px solid var(--border); border-radius:var(--r-md);
   font-size:13.5px; color:var(--espresso); background:#fff;
   transition:var(--ease); box-sizing:border-box;
 }
-.add-field input:focus { border-color:var(--coffee); outline:none; box-shadow:0 0 0 3px rgba(139,90,43,.12); }
+.add-field input:focus, .add-field select:focus { border-color:var(--coffee); outline:none; box-shadow:0 0 0 3px rgba(139,90,43,.12); }
 .add-card .btn-add {
   width:100%; margin-top:12px; padding:11px;
   background:var(--coffee); color:#fff;
