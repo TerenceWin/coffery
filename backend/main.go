@@ -42,7 +42,7 @@ func main() {
 	// every request once logged in. Without this, the browser blocks the
 	// actual request after a successful-looking preflight.
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:  []string{"https://hanacoffee.onrender.com", "http://localhost:3000", "https://coffery.onrender.com"},
+		AllowOrigins:  []string{"https://hanacoffee.onrender.com", "http://localhost:3000", "https://coffery.onrender.com", "http://localhost:5183"},
 		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		ExposeHeaders:   []string{"Content-Length"},

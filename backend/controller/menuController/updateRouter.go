@@ -91,3 +91,29 @@ func (ctrl *MenuController) UpdateName(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Name updated successfully"})
 }
+
+// UpdateCategory moves a menu item to a new category. The item's code is
+// regenerated server-side to match the new category's prefix, so the
+// response includes the new code for the frontend to adopt.
+func (ctrl *MenuController) UpdateCategory(c *gin.Context) {
+	code := c.Param("code")
+	var input struct {
+		Category string `json:"category" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+		return
+	}
+
+	newCode, err := ctrl.store.UpdateCategory(code, input.Category)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Category updated successfully",
+		"code":    newCode,
+	})
+}
