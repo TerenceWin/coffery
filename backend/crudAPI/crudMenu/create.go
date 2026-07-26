@@ -69,7 +69,7 @@ func (s *Store) InsertEntry(item string, category string, cost int, imagePath st
 			return "", err
 		}
 
-		_, err = s.db.Exec("INSERT INTO menu (item, code, cost, imagePath) VALUES ($1, $2, $3, $4)", item, code, cost, imagePath)
+		_, err = s.db.Exec("INSERT INTO menu (item, code, category, cost, imagePath) VALUES ($1, $2, $3, $4, $5)", item, code, category, cost, imagePath)
 		if err == nil {
 			return code, nil
 		}

@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Store) GetAllItems() ([]model.MenuItem, error) {
-	rows, err := s.db.Query("SELECT id, item, code, cost, availability, imagePath FROM menu")
+	rows, err := s.db.Query("SELECT id, item, code, category, cost, availability, imagePath FROM menu")
 	if err != nil {
 		return nil, err
 	}
@@ -14,7 +14,7 @@ func (s *Store) GetAllItems() ([]model.MenuItem, error) {
 	var items []model.MenuItem
 	for rows.Next() {
 		var i model.MenuItem
-		err := rows.Scan(&i.ID, &i.Item, &i.Code, &i.Cost, &i.Available, &i.ImagePath)
+		err := rows.Scan(&i.ID, &i.Item, &i.Code, &i.Category, &i.Cost, &i.Available, &i.ImagePath)
 		if err != nil {
 			continue // Log error or handle later
 		}
