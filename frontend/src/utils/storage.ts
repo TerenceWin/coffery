@@ -90,6 +90,7 @@ export interface OrderItem {
   code: string;
   price: number;
   qty: number;
+  imagePath?: string;
 }
 
 export interface Order {

@@ -254,7 +254,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     statusUpdateFailed: '⚠️ Failed to update status, please try again',
     statusPaid: '✓ Paid',
     statusCancelled: '✕ Cancelled',
-    eachUnit: 'K{0} each',
+    eachUnit: 'Kyat {0} each',
     dashTitle: 'Dashboard',
     menuMgmt: 'Menu',
     qrCodes: 'Table QR Codes',

@@ -205,12 +205,12 @@ export default function StaffPage() {
                   <div className="checkout-item-qty">× {i.qty} · {t('eachUnit', i.price)}</div>
                 </div>
               </div>
-              <span className="checkout-item-sub">K{i.price * i.qty}</span>
+              <span className="checkout-item-sub">Kyat {i.price * i.qty}</span>
             </div>
           ))}
           <div className="checkout-total">
             <span className="checkout-total-label">{t('amountDue')}</span>
-            <span className="checkout-total-val">K{checkoutOrder?.total ?? 0}</span>
+            <span className="checkout-total-val">Kyat {checkoutOrder?.total ?? 0}</span>
           </div>
           <div className="modal-foot">
             <button className="btn-cancel" onClick={() => setCheckoutOrder(null)}>{t('cancel')}</button>
@@ -277,12 +277,12 @@ function OrderCard({ order, isPending, isNew, onCheckout, onCancel, t }: {
               <span className="order-item-name">{i.name}</span>
               <span className="order-item-qty">× {i.qty}</span>
             </div>
-            <span className="order-item-sub">K{i.price * i.qty}</span>
+            <span className="order-item-sub">Kyat {i.price * i.qty}</span>
           </div>
         ))}
         <div className="order-total-row">
           <span className="order-total-label">{t('total')}</span>
-          <span className="order-total-val">K{order.total}</span>
+          <span className="order-total-val">Kyat {order.total}</span>
         </div>
       </div>
       {isPending && (

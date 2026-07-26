@@ -255,7 +255,8 @@
   border-bottom: 1px solid var(--border);
 }
 .cart-item:last-child { border-bottom: none; }
-.cart-item-emoji { font-size: 24px; }
+.cart-item-emoji { font-size: 24px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--latte); border-radius: var(--r-sm); flex-shrink: 0; }
+.cart-item-image { width: 40px; height: 40px; object-fit: cover; border-radius: var(--r-sm); flex-shrink: 0; }
 .cart-item-name { flex: 1; font-size: 14px; font-weight: 600; color: var(--espresso); }
 .cart-item-price { font-size: 14px; font-weight: 700; color: var(--caramel); font-family: 'Playfair Display', serif; }
 

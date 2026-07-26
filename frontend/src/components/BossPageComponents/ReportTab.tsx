@@ -40,7 +40,7 @@ export default function ReportTab({ transactions, loading }: Props) {
         <div className="stat-card">
           <div className="stat-icon si-green"><FontAwesomeIcon icon={faCoins} /></div>
           <div>
-            <div className="stat-value">K {totalRevenue}</div>
+            <div className="stat-value">Kyat {totalRevenue}</div>
             <div className="stat-label">{t('reportRevenue')}</div>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function ReportTab({ transactions, loading }: Props) {
                   <tr key={tx.id}>
                     <td>{t('tableNum')} {tx.tableNum}</td>
                     <td>{tx.items.map(i => `${getEmoji(i.name)} ${i.name} ×${i.qty}`).join(', ')}</td>
-                    <td>K {tx.total}</td>
+                    <td>Kyat {tx.total}</td>
                     <td>
                       {tx.status === 'paid' && <span className="status-pill paid">{t('statusPaid')}</span>}
                       {tx.status === 'cancelled' && <span className="status-pill cancelled">{t('statusCancelled')}</span>}

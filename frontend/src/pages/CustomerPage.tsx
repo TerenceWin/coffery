@@ -14,12 +14,14 @@ interface CartEntry extends OrderItem {
   emoji: string;
 }
 
-function ItemImage({ src, emoji, alt }: { src?: string; emoji: string; alt: string }) {
+function ItemImage({ src, emoji, alt, imgClassName = 'item-image', emojiClassName = 'item-emoji' }: {
+  src?: string; emoji: string; alt: string; imgClassName?: string; emojiClassName?: string;
+}) {
   const [errored, setErrored] = useState(false);
   if (!src || errored) {
-    return <div className="item-emoji">{emoji}</div>;
+    return <div className={emojiClassName}>{emoji}</div>;
   }
-  return <img className="item-image" src={src} alt={alt} onError={() => setErrored(true)} />;
+  return <img className={imgClassName} src={src} alt={alt} onError={() => setErrored(true)} />;
 }
 
 export default function CustomerPage() {
@@ -116,7 +118,7 @@ function connectWS() {
         ...prev,
         [item.code]: existing
           ? { ...existing, qty: existing.qty + 1 }
-          : { emoji, name: item.item, code: item.code, price: item.cost, qty: 1 },
+          : { emoji, name: item.item, code: item.code, price: item.cost, qty: 1, imagePath: item.imagePath },
       };
     });
   }
@@ -226,7 +228,7 @@ function connectWS() {
                   {!item.available && <span className="item-unavail-tag">{t('soldOut')}</span>}
                 </div>
                 <div className="item-right">
-                  <div className="item-price">K {item.cost}</div>
+                  <div className="item-price">Kyat {item.cost}</div>
                   <div className="qty-ctrl">
                     {qty > 0 && (
                       <button className="qty-btn minus" onClick={() => removeFromCart(item.code)} disabled={!item.available}>−</button>
@@ -252,7 +254,7 @@ function connectWS() {
             <div className="cart-badge">{count}</div>
           </div>
           <div className="cart-bar-info">
-            <div className="cart-bar-total">K {cartTotal()}</div>
+            <div className="cart-bar-total">Kyat {cartTotal()}</div>
             <div className="cart-bar-hint">{t('tapToView')}</div>
           </div>
           <div className="cart-bar-btn">{t('viewOrder')}</div>
@@ -281,9 +283,10 @@ function connectWS() {
             </div>
           ) : Object.values(cart).map(i => (
             <div key={i.code} className="cart-item">
-              <div className="cart-item-emoji">{i.emoji}</div>
+              <ItemImage src={i.imagePath} emoji={i.emoji} alt={i.name}
+                imgClassName="cart-item-image" emojiClassName="cart-item-emoji" />
               <div className="cart-item-name">{i.name}</div>
-              <div className="cart-item-price">K {i.price * i.qty}</div>
+              <div className="cart-item-price">Kyat {i.price * i.qty}</div>
               <div className="qty-ctrl">
                 <button className="qty-btn minus" onClick={() => removeFromCart(i.code)}>−</button>
                 <span className="qty-num">{i.qty}</span>
@@ -297,7 +300,7 @@ function connectWS() {
           <div className="cart-sheet-foot">
             <div className="cart-total-row">
               <span className="cart-total-label">{t('total')}</span>
-              <span className="cart-total-val">K {cartTotal()}</span>
+              <span className="cart-total-val">Kyat {cartTotal()}</span>
             </div>
             <button className="btn-place-order" onClick={submitOrder}>{t('submitOrder')}</button>
           </div>
