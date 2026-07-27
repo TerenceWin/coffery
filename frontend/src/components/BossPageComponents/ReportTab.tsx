@@ -95,7 +95,7 @@ export default function ReportTab({ transactions, loading }: Props) {
             <p>{t('noTransactions')}</p>
           </div>
         ) : (
-          <div className="table-wrap">
+          <div className="table-wrap report-table-wrap">
             <table>
               <thead>
                 <tr>

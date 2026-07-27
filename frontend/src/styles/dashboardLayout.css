@@ -197,8 +197,10 @@
 
 /* Table */
 .table-wrap { overflow-x: auto; }
+.report-table-wrap { max-height: 500px; overflow-y: auto; }
 table { width: 100%; border-collapse: collapse; }
 thead { background: var(--latte); }
+.report-table-wrap thead { position: sticky; top: 0; z-index: 1; }
 th {
   padding: 11px 20px;
   text-align: left;

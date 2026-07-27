@@ -4,12 +4,13 @@ import { useLang } from '../context/LangContext';
 import LangSwitcher from '../components/LangSwitcher';
 import ConnectionBadge from '../components/ConnectionBadge';
 import { useToast, ToastContainer } from '../components/Toast';
-import { placeOrder, callStaff } from '../utils/storage';
-import type { OrderItem } from '../utils/storage';
+import { placeOrder, callStaff, getOrders } from '../utils/storage';
+import type { OrderItem, Order } from '../utils/storage';
 import { getEmoji } from '../utils/helpers';
 import api from '../services/api';
 import { MenuItem } from '../models/MenuItem';
 import {AddToCartItem } from '../models/AddToCartItem';
+import { CATEGORIES } from '../constants/categories';
 
 interface CartEntry extends OrderItem {
   emoji: string;
@@ -50,6 +51,8 @@ export default function CustomerPage() {
   const [loadErr, setLoadErr]     = useState('');
   const [cart, setCart]           = useState<Record<string, CartEntry>>(() => loadCachedCart(tableNum));
   const [cartOpen, setCartOpen]   = useState(false);
+  const [sheetTab, setSheetTab]   = useState<'cart' | 'orders'>('cart');
+  const [myOrders, setMyOrders]   = useState<Order[]>([]);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [wsConnected, setWsConnected] = useState(true);
   const wsRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,6 +74,20 @@ export default function CustomerPage() {
     if (!tableNum) return;
     sessionStorage.setItem(cartStorageKey(tableNum), JSON.stringify(cart));
   }, [cart, tableNum]);
+
+  useEffect(() => {
+    if (cartOpen) loadMyOrders();
+  }, [cartOpen]);
+
+  async function loadMyOrders() {
+    if (!tableNum) return;
+    try {
+      const orders = await getOrders();
+      setMyOrders(orders.filter(o => o.tableNum === tableNum && o.status === 'pending'));
+    } catch {
+      // silent - the tab just won't refresh until the next successful poll
+    }
+  }
 
   async function loadMenu() {
     setLoading(true); setLoadErr('');
@@ -123,6 +140,11 @@ function connectWS() {
                     if (!prev[msg.code]) return prev;
                     return { ...prev, [msg.code]: { ...prev[msg.code], name: msg.name } };
                 });
+            }
+
+            if (msg.type === 'new_transaction' || msg.type === 'transaction_status_update') {
+                // Keep the "My Order" tab fresh - e.g. drop an order the moment staff checks it out.
+                loadMyOrders();
             }
         } catch (e) {
             console.error("Failed to parse WS message:", e);
@@ -246,12 +268,13 @@ function connectWS() {
           {menuItems.map(item => {
             const qty   = cart[item.code]?.qty || 0;
             const emoji = getEmoji(item.item);
+            const categoryLabel = CATEGORIES.find(c => c.value === item.category);
             return (
               <div key={item.code} className={`menu-item${!item.available ? ' unavailable' : ''}`} data-code={item.code}>
                 <ItemImage src={item.imagePath} emoji={emoji} alt={item.item} />
                 <div className="item-info">
                   <div className="item-name">{item.item}</div>
-                  <div className="item-code">{item.code}</div>
+                  <div className="item-code">{categoryLabel ? t(categoryLabel.labelKey) : item.category}</div>
                   {!item.available && <span className="item-unavail-tag">{t('soldOut')}</span>}
                 </div>
                 <div className="item-right">
@@ -271,59 +294,92 @@ function connectWS() {
       )}
 
       {/* Cart bar */}
-      {count > 0 && (
-        <div className="cart-bar" onClick={() => setCartOpen(true)}>
-          <div className="cart-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.98-1.67L23 6H6"/>
-            </svg>
-            <div className="cart-badge">{count}</div>
-          </div>
-          <div className="cart-bar-info">
-            <div className="cart-bar-total">Kyat {cartTotal()}</div>
-            <div className="cart-bar-hint">{t('tapToView')}</div>
-          </div>
-          <div className="cart-bar-btn">{t('viewOrder')}</div>
+      <div className="cart-bar" onClick={() => setCartOpen(true)}>
+        <div className="cart-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.98-1.67L23 6H6"/>
+          </svg>
+          {count > 0 && <div className="cart-badge">{count}</div>}
         </div>
-      )}
+        <div className="cart-bar-info">
+          <div className="cart-bar-total">Kyat {cartTotal()}</div>
+          <div className="cart-bar-hint">{t('tapToView')}</div>
+        </div>
+        <div className="cart-bar-btn">{t('viewOrder')}</div>
+      </div>
 
       {/* Cart overlay + sheet */}
       <div className={`cart-overlay${cartOpen ? ' open' : ''}`} onClick={() => setCartOpen(false)} />
       <div className={`cart-sheet${cartOpen ? ' open' : ''}`}>
         <div className="cart-sheet-head">
-          <h3>{t('myOrder')}</h3>
+          <div className="cart-sheet-tabs">
+            <button className={`cart-sheet-tab${sheetTab === 'cart' ? ' active' : ''}`} onClick={() => setSheetTab('cart')}>
+              {t('myCart')}
+            </button>
+            <button className={`cart-sheet-tab${sheetTab === 'orders' ? ' active' : ''}`} onClick={() => setSheetTab('orders')}>
+              {t('myOrder')}{myOrders.length > 0 && ` (${myOrders.length})`}
+            </button>
+          </div>
           <button className="sheet-close" onClick={() => setCartOpen(false)}>✕</button>
         </div>
 
         <div className="cart-items-scroll">
-          {orderPlaced ? (
-            <div className="order-success">
-              <div className="s-icon">✅</div>
-              <h3>{t('orderSuccess')}</h3>
-              <p style={{ whiteSpace: 'pre-line' }}>{t('orderSuccessSub')}</p>
-            </div>
-          ) : Object.values(cart).length === 0 ? (
+          {sheetTab === 'cart' ? (
+            orderPlaced ? (
+              <div className="order-success">
+                <div className="s-icon">✅</div>
+                <h3>{t('orderSuccess')}</h3>
+                <p style={{ whiteSpace: 'pre-line' }}>{t('orderSuccessSub')}</p>
+              </div>
+            ) : Object.values(cart).length === 0 ? (
+              <div className="cart-empty">
+                <div className="e-icon">🛒</div>
+                <p style={{ whiteSpace: 'pre-line' }}>{t('emptyCart')}</p>
+              </div>
+            ) : Object.values(cart).map(i => (
+              <div key={i.code} className="cart-item">
+                <ItemImage src={i.imagePath} emoji={i.emoji} alt={i.name}
+                  imgClassName="cart-item-image" emojiClassName="cart-item-emoji" />
+                <div className="cart-item-name">{i.name}</div>
+                <div className="cart-item-price">Kyat {i.price * i.qty}</div>
+                <div className="qty-ctrl">
+                  <button className="qty-btn minus" onClick={() => removeFromCart(i.code)}>−</button>
+                  <span className="qty-num">{i.qty}</span>
+                  <button className="qty-btn plus" onClick={() => addToCart({item: i.name, code: i.code, cost: i.price, available: true })}>+</button>
+                </div>
+              </div>
+            ))
+          ) : myOrders.length === 0 ? (
             <div className="cart-empty">
-              <div className="e-icon">🛒</div>
-              <p style={{ whiteSpace: 'pre-line' }}>{t('emptyCart')}</p>
+              <div className="e-icon">🧾</div>
+              <p style={{ whiteSpace: 'pre-line' }}>{t('noActiveOrders')}</p>
             </div>
-          ) : Object.values(cart).map(i => (
-            <div key={i.code} className="cart-item">
-              <ItemImage src={i.imagePath} emoji={i.emoji} alt={i.name}
-                imgClassName="cart-item-image" emojiClassName="cart-item-emoji" />
-              <div className="cart-item-name">{i.name}</div>
-              <div className="cart-item-price">Kyat {i.price * i.qty}</div>
-              <div className="qty-ctrl">
-                <button className="qty-btn minus" onClick={() => removeFromCart(i.code)}>−</button>
-                <span className="qty-num">{i.qty}</span>
-                <button className="qty-btn plus" onClick={() => addToCart({item: i.name, code: i.code, cost: i.price, available: true })}>+</button>
+          ) : myOrders.map(order => (
+            <div key={order.id} className="my-order-card">
+              <div className="my-order-head">
+                <span className="my-order-time">
+                  {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span className="my-order-status-pill">{t('pending')}</span>
+              </div>
+              {order.items.map(i => (
+                <div key={i.code} className="cart-item">
+                  <ItemImage src={menuItems.find(m => m.code === i.code)?.imagePath} emoji={i.emoji} alt={i.name}
+                    imgClassName="cart-item-image" emojiClassName="cart-item-emoji" />
+                  <div className="cart-item-name">{i.name} ×{i.qty}</div>
+                  <div className="cart-item-price">Kyat {i.price * i.qty}</div>
+                </div>
+              ))}
+              <div className="my-order-total">
+                <span>{t('total')}</span>
+                <span>Kyat {order.total}</span>
               </div>
             </div>
           ))}
         </div>
 
-        {!orderPlaced && Object.values(cart).length > 0 && (
+        {sheetTab === 'cart' && !orderPlaced && Object.values(cart).length > 0 && (
           <div className="cart-sheet-foot">
             <div className="cart-total-row">
               <span className="cart-total-label">{t('total')}</span>
