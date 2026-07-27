@@ -14,11 +14,15 @@ export default function QRTab() {
 
   function downloadAll() {
     const canvases = document.querySelectorAll<HTMLCanvasElement>('.qr-grid canvas');
+    // Chrome silently blocks automatic downloads once too many fire in a tight
+    // synchronous burst (~10) - stagger them so each one lands separately.
     canvases.forEach((canvas, i) => {
-      const a = document.createElement('a');
-      a.download = `hana-table-${i + 1}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
+      setTimeout(() => {
+        const a = document.createElement('a');
+        a.download = `hana-table-${i + 1}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+      }, i * 300);
     });
   }
 

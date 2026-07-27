@@ -42,6 +42,11 @@
 .btn-call:hover { background: rgba(255,255,255,.25); }
 .btn-call svg { width: 14px; height: 14px; }
 
+@media (max-width: 480px) {
+  .btn-call { padding: 9px; gap: 0; }
+  .btn-call-text { display: none; }
+}
+
 .c-table-badge {
   display: inline-flex;
   align-items: center;
